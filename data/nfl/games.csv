@@ -734,7 +734,7 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401873075,2026-11-22T21:25Z,2026,post,0,0,7,Broncos,DEN,13,Raiders,LV,38.0,24.0,Draft Kings,-11.5,-8.5,-108.0,-111.0,41.5,41.5,-105.0,-114.0,-660.0,481.0,,,,,,,,,,,,,,,,,Denver Broncos,Las Vegas Raiders
 401873077,2026-11-23T01:20Z,2026,post,1,0,25,49ers,SF,16,Vikings,MIN,35.0,10.0,Draft Kings,-3.5,-3.5,-115.0,-104.0,45.5,46.5,-104.0,-115.0,-198.0,166.0,,,,,,,,,,,,,,,,,San Francisco 49ers,Minnesota Vikings
 401873078,2026-11-24T01:15Z,2026,post,0,0,28,Commanders,WSH,4,Bengals,CIN,22.0,20.0,Draft Kings,6.0,1.5,-103.0,-116.0,54.5,52.5,-107.0,-112.0,237.0,-290.0,,,,,,,,,,,,,,,,,Washington Commanders,Cincinnati Bengals
-401873079,2026-11-26T01:00Z,2026,pre,0,0,14,Rams,LAR,9,Packers,GB,,,DraftKings,-2.5,-3.5,-110.0,-109.0,44.5,49.5,-105.0,-114.0,-137.0,116.0,,,,,,,,,,,,,,,,,Los Angeles Rams,Green Bay Packers
-401873081,2026-11-26T18:00Z,2026,pre,0,0,8,Lions,DET,3,Bears,CHI,,,DraftKings,1.5,-2.5,-109.0,-110.0,55.5,51.5,-104.0,-115.0,103.0,-122.0,,,,,,,,,,,,,,,,,Detroit Lions,Chicago Bears
-401873080,2026-11-26T21:30Z,2026,pre,0,0,6,Cowboys,DAL,21,Eagles,PHI,,,DraftKings,-8.5,-1.5,-111.0,-108.0,47.5,49.5,-116.0,-103.0,-464.0,359.0,,,,,,,,,,,,,,,,,Dallas Cowboys,Philadelphia Eagles
-401873082,2026-11-27T01:20Z,2026,pre,0,0,2,Bills,BUF,12,Chiefs,KC,,,DraftKings,-3.0,-2.5,100.0,-120.0,46.5,49.5,-108.0,-111.0,-148.0,125.0,,,,,,,,,,,,,,,,,Buffalo Bills,Kansas City Chiefs
+401873079,2026-11-26T01:00Z,2026,pre,0,0,14,Rams,LAR,9,Packers,GB,,,Draft Kings,-2.5,-3.5,-115.0,-104.0,43.5,49.5,-114.0,-105.0,-143.0,121.0,,,,,,,,,,,,,,,,,Los Angeles Rams,Green Bay Packers
+401873081,2026-11-26T18:00Z,2026,pre,0,0,8,Lions,DET,3,Bears,CHI,,,Draft Kings,1.5,-2.5,-109.0,-110.0,55.5,51.5,-104.0,-115.0,103.0,-122.0,,,,,,,,,,,,,,,,,Detroit Lions,Chicago Bears
+401873080,2026-11-26T21:30Z,2026,pre,0,0,6,Cowboys,DAL,21,Eagles,PHI,,,Draft Kings,-8.5,-1.5,-111.0,-108.0,47.5,49.5,-116.0,-103.0,-464.0,359.0,,,,,,,,,,,,,,,,,Dallas Cowboys,Philadelphia Eagles
+401873082,2026-11-27T01:20Z,2026,pre,0,0,2,Bills,BUF,12,Chiefs,KC,,,Draft Kings,-3.0,-2.5,100.0,-120.0,46.5,49.5,-108.0,-111.0,-148.0,125.0,,,,,,,,,,,,,,,,,Buffalo Bills,Kansas City Chiefs
