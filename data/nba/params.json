@@ -4,20 +4,20 @@
  "prev_w": 0.35,
  "pool_min": 6,
  "margin_sd": 14.29,
- "total_sd": 18.32,
+ "total_sd": 18.3,
  "min_ev": 0.03,
  "ml_flag": false,
  "w_margin": 0.0,
- "w_total": 0.2,
+ "w_total": 0.15,
  "e_half_life": 30,
  "e_lam": 3,
- "e_prev_w": 0.15,
+ "e_prev_w": 0.35,
  "t_lam": 5.0,
  "mix_margin": 0.0,
- "mix_total": 0.7,
+ "mix_total": 0.0,
  "blend_fit": true,
  "box_games_at_tune": 1312,
- "box_complete": false,
+ "box_complete": true,
  "mix_fit": {
   "margin": {
    "mix": 0.0,
@@ -26,17 +26,17 @@
    "mae": 11.209280303030303,
    "market_mae": 11.209280303030303,
    "pts_mae": 11.775257573768702,
-   "eff_mae": 11.751230261798241,
+   "eff_mae": 11.769754642069891,
    "n": 1056
   },
   "total": {
-   "mix": 0.7,
-   "w": 0.2,
-   "sd": 18.324703589174774,
-   "mae": 14.534800867733724,
+   "mix": 0.0,
+   "w": 0.15,
+   "sd": 18.304984319845918,
+   "mae": 14.536749335500016,
    "market_mae": 14.549242424242424,
    "pts_mae": 14.99205709764546,
-   "eff_mae": 15.115627102411231,
+   "eff_mae": 15.162350435293192,
    "n": 1056
   }
  },
@@ -334,288 +334,288 @@
    "half_life": 30,
    "lam": 3,
    "prev_w": 0.15,
-   "mae_margin": 11.457438737184734,
-   "mae_total": 15.495313561625139
+   "mae_margin": 11.486029056868974,
+   "mae_total": 15.580467797621473
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 3,
    "prev_w": 0.35,
-   "mae_margin": 11.525999328891267,
-   "mae_total": 15.541077569513618
+   "mae_margin": 11.487022012158764,
+   "mae_total": 15.555554342658725
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 3,
    "prev_w": 0.7,
-   "mae_margin": 11.701747691146185,
-   "mae_total": 15.711931923179487
+   "mae_margin": 11.540171678736211,
+   "mae_total": 15.564370320763175
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 8,
    "prev_w": 0.15,
-   "mae_margin": 11.544824107451426,
-   "mae_total": 15.454550816896488
+   "mae_margin": 11.571687630138685,
+   "mae_total": 15.507789299722445
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 8,
    "prev_w": 0.35,
-   "mae_margin": 11.585184757703557,
-   "mae_total": 15.506816409207538
+   "mae_margin": 11.573003071858325,
+   "mae_total": 15.508783186957627
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 8,
    "prev_w": 0.7,
-   "mae_margin": 11.723643060330811,
-   "mae_total": 15.666423966150752
+   "mae_margin": 11.603438860932107,
+   "mae_total": 15.536100587021497
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 20,
    "prev_w": 0.15,
-   "mae_margin": 11.802953825016834,
-   "mae_total": 15.470822408322354
+   "mae_margin": 11.838112659492639,
+   "mae_total": 15.50141308862257
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 20,
    "prev_w": 0.35,
-   "mae_margin": 11.79987771778994,
-   "mae_total": 15.50940659167133
+   "mae_margin": 11.832745090332034,
+   "mae_total": 15.515523781223376
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 20,
    "prev_w": 0.7,
-   "mae_margin": 11.854861780683017,
-   "mae_total": 15.630071435347727
+   "mae_margin": 11.831501338692,
+   "mae_total": 15.550831631632795
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 50,
    "prev_w": 0.15,
-   "mae_margin": 12.248685019541881,
-   "mae_total": 15.539470698044616
+   "mae_margin": 12.28285261261944,
+   "mae_total": 15.556321027132027
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 50,
    "prev_w": 0.35,
-   "mae_margin": 12.209701123239004,
-   "mae_total": 15.573667445221387
+   "mae_margin": 12.263419371038921,
+   "mae_total": 15.575080843211499
   },
   {
    "model": "eff",
    "half_life": 30,
    "lam": 50,
    "prev_w": 0.7,
-   "mae_margin": 12.177188519312573,
-   "mae_total": 15.645161084737689
+   "mae_margin": 12.236776639769454,
+   "mae_total": 15.609912844645367
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 3,
    "prev_w": 0.15,
-   "mae_margin": 11.475141325828794,
-   "mae_total": 15.565937081939246
+   "mae_margin": 11.469720791206722,
+   "mae_total": 15.593450139074577
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 3,
    "prev_w": 0.35,
-   "mae_margin": 11.556630324401723,
-   "mae_total": 15.634347268176219
+   "mae_margin": 11.517248969081853,
+   "mae_total": 15.593212910915188
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 3,
    "prev_w": 0.7,
-   "mae_margin": 11.744342985755342,
-   "mae_total": 15.801722514170581
+   "mae_margin": 11.653701457296036,
+   "mae_total": 15.660456433429772
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 8,
    "prev_w": 0.15,
-   "mae_margin": 11.521207113435334,
-   "mae_total": 15.526386860728753
+   "mae_margin": 11.516265332809194,
+   "mae_total": 15.540669350490463
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 8,
    "prev_w": 0.35,
-   "mae_margin": 11.586483184549365,
-   "mae_total": 15.59664712139817
+   "mae_margin": 11.544719110649497,
+   "mae_total": 15.568511574885292
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 8,
    "prev_w": 0.7,
-   "mae_margin": 11.748079668814967,
-   "mae_total": 15.766713944595528
+   "mae_margin": 11.654966739906234,
+   "mae_total": 15.639847305594545
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 20,
    "prev_w": 0.15,
-   "mae_margin": 11.687879178594827,
-   "mae_total": 15.515092460507985
+   "mae_margin": 11.696857822071081,
+   "mae_total": 15.517203777227229
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 20,
    "prev_w": 0.35,
-   "mae_margin": 11.716128648969313,
-   "mae_total": 15.573446919676202
+   "mae_margin": 11.702294461254278,
+   "mae_total": 15.556016625329034
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 20,
    "prev_w": 0.7,
-   "mae_margin": 11.809038661651618,
-   "mae_total": 15.725393279822118
+   "mae_margin": 11.753395553288852,
+   "mae_total": 15.62607018484367
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 50,
    "prev_w": 0.15,
-   "mae_margin": 12.061580797209649,
-   "mae_total": 15.55076306384835
+   "mae_margin": 12.077764657938372,
+   "mae_total": 15.547323566390993
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 50,
    "prev_w": 0.35,
-   "mae_margin": 12.02950458480063,
-   "mae_total": 15.598812447096941
+   "mae_margin": 12.04694491755373,
+   "mae_total": 15.588019649200765
   },
   {
    "model": "eff",
    "half_life": 60,
    "lam": 50,
    "prev_w": 0.7,
-   "mae_margin": 12.02280431288475,
-   "mae_total": 15.706191031886766
+   "mae_margin": 12.025682296352409,
+   "mae_total": 15.651060455018667
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 3,
    "prev_w": 0.15,
-   "mae_margin": 11.506287979928967,
-   "mae_total": 15.635806019933531
+   "mae_margin": 11.50504719507483,
+   "mae_total": 15.64377006989436
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 3,
    "prev_w": 0.35,
-   "mae_margin": 11.605615254875389,
-   "mae_total": 15.718788814738172
+   "mae_margin": 11.608341288833294,
+   "mae_total": 15.678042077015933
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 3,
    "prev_w": 0.7,
-   "mae_margin": 11.789353597696579,
-   "mae_total": 15.891258929605666
+   "mae_margin": 11.801979400416759,
+   "mae_total": 15.79945205630451
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 8,
    "prev_w": 0.15,
-   "mae_margin": 11.53518617871042,
-   "mae_total": 15.59815787467319
+   "mae_margin": 11.527013947441352,
+   "mae_total": 15.608125043553997
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 8,
    "prev_w": 0.35,
-   "mae_margin": 11.615620174290374,
-   "mae_total": 15.684592281465193
+   "mae_margin": 11.609511939559626,
+   "mae_total": 15.653807739718395
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 8,
    "prev_w": 0.7,
-   "mae_margin": 11.783772350173303,
-   "mae_total": 15.859173866652847
+   "mae_margin": 11.781936357749887,
+   "mae_total": 15.77832639911061
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 20,
    "prev_w": 0.15,
-   "mae_margin": 11.657385430311315,
-   "mae_total": 15.571905955485487
+   "mae_margin": 11.65581324672064,
+   "mae_total": 15.57853780645245
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 20,
    "prev_w": 0.35,
-   "mae_margin": 11.703162234146777,
-   "mae_total": 15.647885904677953
+   "mae_margin": 11.698201358336275,
+   "mae_total": 15.6317258826768
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 20,
    "prev_w": 0.7,
-   "mae_margin": 11.813783385721292,
-   "mae_total": 15.810521183518496
+   "mae_margin": 11.801794813857382,
+   "mae_total": 15.751618140594887
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 50,
    "prev_w": 0.15,
-   "mae_margin": 11.960603009812623,
-   "mae_total": 15.587558881785997
+   "mae_margin": 11.962361124514814,
+   "mae_total": 15.587817903847332
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 50,
    "prev_w": 0.35,
-   "mae_margin": 11.941697348132113,
-   "mae_total": 15.644292076483527
+   "mae_margin": 11.941861090161241,
+   "mae_total": 15.640531049862332
   },
   {
    "model": "eff",
    "half_life": 120,
    "lam": 50,
    "prev_w": 0.7,
-   "mae_margin": 11.965421615284917,
-   "mae_total": 15.771251812702188
+   "mae_margin": 11.958931863808441,
+   "mae_total": 15.74188979241675
   }
  ]
 }
