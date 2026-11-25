@@ -27,7 +27,8 @@ def render(slate, ratings, rec, bt, p, now, calibrated=True):
         "record": rec,
         "backtest": bt,
         "hca": ratings.hca, "mu": ratings.mu,
-        "ratings": tab[["team", "off", "def", "net", "games"]].round(2).to_dict("records"),
+        "ratings": tab[[c for c in ("team", "off", "def", "net", "games", "adj_o", "adj_d", "adj_em", "tempo")
+                        if c in tab.columns]].round(2).to_dict("records"),
     }
     DOCS.mkdir(exist_ok=True)
     payload = json.dumps(_clean(data), default=float, separators=(",", ":")).replace("</", "<\\/")
@@ -115,6 +116,13 @@ function btTable(b){
   for(const r of b){h+=r.n?`<tr><td>${r.ev}</td><td>${r.n}</td><td>${pct(r.win_pct)}</td><td class="${r.roi>0?'pos':''}">${pct(r.roi)}</td><td>${r.roi_se==null?'–':pct(r.roi_se)}</td><td>${sgn(r.units,1)}</td></tr>`:`<tr><td>${r.ev}</td><td>0</td><td colspan=4></td></tr>`}
   return h+'</table>';
 }
+function segTable(sg){
+  if(!sg)return '';let h='<p class="note" style="margin-top:10px">Flagged plays by game type. Lots of splits means some look good by luck: only trust a split whose ROI beats ±2 SE and holds next season.</p><table><tr><th>Split</th><th>Bets</th><th>ROI</th><th>±1 SE</th></tr>';
+  const lab={month:'',conf:'',size:'Spread '};
+  for(const k of ['month','conf','size'])for(const r of (sg[k]||[]).sort((a,b)=>a.group<b.group?-1:1))
+    h+=`<tr><td>${lab[k]}${r.group}</td><td>${r.n}</td><td class="${r.roi-2*(r.roi_se||9)>0?'pos':''}">${pct(r.roi)}</td><td>${r.roi_se==null?'–':pct(r.roi_se)}</td></tr>`;
+  return h+'</table>';
+}
 function backtest(){
   const B=D.backtest;if(!B||!B.this_season){$('#m').innerHTML='<p class="note">Backtest not run yet.</p>';return}
   let h=`<p class="note">Walk-forward: each day is priced using only games played before it, against ESPN's posted line, graded on the final. Last season was used to pick the 3 rating knobs; this season is fully out of sample. If the model's error is bigger than the line's, expect edges to be mostly noise.</p>`;
@@ -122,15 +130,21 @@ function backtest(){
     h+=`<h2>${lab}: ${s.games} games</h2><div class="card"><table><tr><th>Avg miss</th><th>Model</th><th>Market line</th></tr>
     <tr><td>Margin</td><td>${fmt(s.model_margin_mae_same_games??s.model_margin_mae,2)}</td><td>${fmt(s.line_margin_mae,2)}</td></tr>
     <tr><td>Total</td><td>${fmt(s.model_total_mae_same_games??s.model_total_mae,2)}</td><td>${fmt(s.line_total_mae,2)}</td></tr></table>
-    <p class="note">Games with lines: ${s.n_spread_lines||0} spreads, ${s.n_total_lines||0} totals. Lower is better.</p></div>`;
-    for(const mk of ['spread','total','ml'])if(s.buckets&&s.buckets[mk])h+=`<div class="card"><b>${mk==='ml'?'Moneyline':mk[0].toUpperCase()+mk.slice(1)}</b> by model EV${btTable(s.buckets[mk])}</div>`;
+    <tr><td class="mut">· points model</td><td class="mut">${fmt(s.pts_margin_mae_same_games,2)} / ${fmt(s.pts_total_mae_same_games,2)}</td><td></td></tr>
+    <tr><td class="mut">· efficiency model</td><td class="mut">${fmt(s.eff_margin_mae_same_games,2)} / ${fmt(s.eff_total_mae_same_games,2)}</td><td></td></tr></table>
+    <p class="note">Games with lines: ${s.n_spread_lines||0} spreads, ${s.n_total_lines||0} totals. Lower is better. "Model" is the tuned mix of the two rating models.</p></div>`;
+    for(const mk of ['spread','total','ml'])if(s.buckets&&s.buckets[mk])h+=`<div class="card"><b>${mk==='ml'?'Moneyline':mk[0].toUpperCase()+mk.slice(1)}</b> by model EV${btTable(s.buckets[mk])}${segTable(s.segments&&s.segments[mk])}</div>`;
   }
-  const p=D.params;h+=`<p class="note">Bets are priced on a blend: ${pct(p.w_margin,0)} ratings / ${pct(1-p.w_margin,0)} market line for margin, ${pct(p.w_total,0)} / ${pct(1-p.w_total,0)} for total (weights fit on last season). A weight near 0% means the ratings add little beyond the line.</p><p class="note">Params: half-life ${p.half_life}d · ridge ${p.lam} · last-season weight ${p.prev_w} · margin σ ${fmt(p.margin_sd,2)} · total σ ${fmt(p.total_sd,2)} · home court ${fmt(D.hca,2)} pts</p>`;
+  const p=D.params;h+=`<p class="note">Ratings forecast = ${pct(1-p.mix_margin,0)} points model + ${pct(p.mix_margin,0)} efficiency model for margin (${pct(1-p.mix_total,0)} / ${pct(p.mix_total,0)} for total). Bets are priced on a blend of that with the market: ${pct(p.w_margin,0)} ratings / ${pct(1-p.w_margin,0)} line for margin, ${pct(p.w_total,0)} / ${pct(1-p.w_total,0)} for total (all fit on last season). A ratings weight near 0% means they add little beyond the line.</p><p class="note">Params: half-life ${p.half_life}d · ridge ${p.lam} · last-season weight ${p.prev_w} · margin σ ${fmt(p.margin_sd,2)} · total σ ${fmt(p.total_sd,2)} · home court ${fmt(D.hca,2)} pts</p>`;
   $('#m').innerHTML=h;
 }
 function ratings(){
-  let h=`<p class="note">Points per game vs an average D-I team. Off = points scored above avg, Def = points allowed above avg (lower is better). Net = Off − Def.</p><div class="card"><table><tr><th>#</th><th style="text-align:left">Team</th><th>Net</th><th>Off</th><th>Def</th><th>GP</th></tr>`;
-  D.ratings.forEach((r,i)=>{h+=`<tr><td>${i+1}</td><td style="text-align:left">${r.team}</td><td>${sgn(r.net)}</td><td>${sgn(r.off)}</td><td>${sgn(r.def)}</td><td>${r.games}</td></tr>`});
+  const E=D.ratings.length&&D.ratings[0].adj_o!=null;
+  let h=E?`<p class="note">Per 100 possessions vs D-I average (KenPom-style). AdjO = points scored, AdjD = points allowed (lower is better), EM = AdjO − AdjD, Tempo = possessions per game vs an average-pace opponent.</p>`
+         :`<p class="note">Points per game vs an average D-I team. Off = points scored above avg, Def = points allowed above avg (lower is better). Net = Off − Def.</p>`;
+  h+=`<div class="card"><table><tr><th>#</th><th style="text-align:left">Team</th>${E?'<th>EM</th><th>AdjO</th><th>AdjD</th><th>Tempo</th>':'<th>Net</th><th>Off</th><th>Def</th>'}<th>GP</th></tr>`;
+  const RS=E?[...D.ratings].sort((a,b)=>b.adj_em-a.adj_em):D.ratings;
+  RS.forEach((r,i)=>{h+=`<tr><td>${i+1}</td><td style="text-align:left">${r.team}</td>${E?`<td>${sgn(r.adj_em)}</td><td>${fmt(r.adj_o)}</td><td>${fmt(r.adj_d)}</td><td>${fmt(r.tempo)}</td>`:`<td>${sgn(r.net)}</td><td>${sgn(r.off)}</td><td>${sgn(r.def)}</td>`}<td>${r.games}</td></tr>`});
   $('#m').innerHTML=h+'</table></div>';
 }
 const V={slate,record,backtest,ratings};

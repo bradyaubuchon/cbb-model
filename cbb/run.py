@@ -44,44 +44,58 @@ def pull(days, games, force=()):
     return games
 
 
-LINES_CHECKED = store.DATA / "lines_checked.txt"
+SUMMARY_CHECKED = store.DATA / "summary_checked.txt"
+BOX_DONE = [False]
 
 
-def backfill_lines(games, cur, budget):
-    """Fill closing lines for finished games from ESPN game summaries, a batch per run,
-    last season first (it is what tuning and the backtest need)."""
-    checked = set(LINES_CHECKED.read_text().split()) if LINES_CHECKED.exists() else set()
+def backfill_summaries(games, cur, budget):
+    """Fill box scores (and closing lines where missing) for finished games from ESPN game
+    summaries, a batch per run: last season first, then this season, then the season before."""
+    checked = set(SUMMARY_CHECKED.read_text().split()) if SUMMARY_CHECKED.exists() else set()
+    for col in espn.BOX_COLS:
+        if col not in games.columns:
+            games[col] = float("nan")
     fin = store.finished(games)
-    todo = fin[fin["spread"].isna() & fin["total"].isna() & (fin["season"] >= cur - 1)
-               & ~fin["id"].isin(checked)]
-    todo = todo.assign(pri=(todo["season"] != cur - 1).astype(int)).sort_values(["pri", "date"])
-    todo = todo.head(budget)
+    todo = fin[fin["h_fga"].isna() & (fin["season"] >= cur - 2) & ~fin["id"].isin(checked)]
+    pri = todo["season"].map({cur - 1: 0, cur: 1, cur - 2: 2})
+    todo = todo.assign(pri=pri).sort_values(["pri", "date"]).head(budget)
     if todo.empty:
         return games, 0
-    print(f"Backfilling closing lines for {len(todo)} games ({len(fin[fin['spread'].isna()])} missing)...", flush=True)
+    remaining = int(len(fin[fin["h_fga"].isna() & (fin["season"] >= cur - 2) & ~fin["id"].isin(checked)])) - len(todo)
+    print(f"Backfilling box scores/lines for {len(todo)} games "
+          f"({int(fin['h_fga'].isna().sum())} without box scores)...", flush=True)
     idx = games.set_index("id")
-    found = 0
+    nbox = nline = 0
     for i, g in enumerate(todo.to_dict("records")):
         try:
-            o = espn.summary_odds(g["id"], g["home_abbr"], g["away_abbr"])
+            odds, box = espn.summary(g["id"], g["home_id"], g["away_id"], g["home_abbr"], g["away_abbr"])
         except Exception as e:
             print(f"  ! summary {g['id']}: {e}", flush=True)
             continue
-        checked.add(g["id"])
-        if o:
-            for k, v in o.items():
+        age = pd.Timestamp.now(tz="UTC") - pd.Timestamp(g["date"])
+        if box or age > pd.Timedelta(days=3):
+            checked.add(g["id"])  # retry recent games whose box score isn't posted yet
+        if box:
+            for k, v in box.items():
+                if k in idx.columns:
+                    idx.at[g["id"], k] = v
+            nbox += 1
+        if odds and pd.isna(idx.at[g["id"], "spread"]) and pd.isna(idx.at[g["id"], "total"]):
+            for k, v in odds.items():
                 if v is not None:
                     idx.at[g["id"], k] = v
-            found += 1
+            nline += 1
         if not os.environ.get("CBB_FAKE"):
-            time.sleep(0.25)
-        if (i + 1) % 200 == 0:
-            print(f"  ...{i + 1} done, {found} with lines", flush=True)
+            time.sleep(0.2)
+        if (i + 1) % 500 == 0:
+            print(f"  ...{i + 1} done ({nbox} box scores, {nline} new lines)", flush=True)
+            idx.reset_index().to_csv(store.GAMES, index=False)
+            SUMMARY_CHECKED.write_text("\n".join(sorted(checked)))
     games = idx.reset_index()
     games.to_csv(store.GAMES, index=False)
-    LINES_CHECKED.write_text("\n".join(sorted(checked)))
-    print(f"  lines found for {found}/{len(todo)}", flush=True)
-    return games, found
+    SUMMARY_CHECKED.write_text("\n".join(sorted(checked)))
+    print(f"  box scores {nbox}, new lines {nline}, {remaining} games left for later runs", flush=True)
+    return games, remaining
 
 
 def load_params():
@@ -91,22 +105,18 @@ def load_params():
 
 
 def do_tune(games, cur):
-    print("Tuning rating parameters on last season (walk-forward)...", flush=True)
+    print("Tuning both models on last season (walk-forward)...", flush=True)
     best, log = backtest.tune(games, [cur - 1])
-    if best is None:
-        best = model.Params()
     pred = backtest.walk_forward(games, best, [cur - 1], step=1)
-    if not pred.empty:  # probabilities use the real error spread, measured walk-forward
-        best.margin_sd = round(float(((pred["home_score"] - pred["away_score"]) - pred["pred_margin"]).std()), 2)
-        best.total_sd = round(float(((pred["home_score"] + pred["away_score"]) - pred["pred_total"]).std()), 2)
-        b = backtest.fit_blend(pred, best)
-        if "margin" in b:
-            best.w_margin, best.margin_sd = b["margin"][0], round(b["margin"][1], 2)
-        if "total" in b:
-            best.w_total, best.total_sd = b["total"][0], round(b["total"][1], 2)
-        print("Blend (weight, sd, blend MAE, market MAE):", b, flush=True)
-    store.PARAMS.write_text(json.dumps({**best.to_dict(), "blend_fit": "margin" in b if not pred.empty else False,
-                                        "tune_log": log}, indent=1, default=float))
+    mix = backtest.fit_mix(pred) if not pred.empty else {}
+    if "margin" in mix:
+        best.mix_margin, best.w_margin, best.margin_sd = mix["margin"]["mix"], mix["margin"]["w"], round(mix["margin"]["sd"], 2)
+    if "total" in mix:
+        best.mix_total, best.w_total, best.total_sd = mix["total"]["mix"], mix["total"]["w"], round(mix["total"]["sd"], 2)
+    print("Mix/blend fit:", json.dumps(mix, indent=1), flush=True)
+    has_box = "h_fga" in games.columns and int(store.finished(games).query("season == @cur - 1")["h_fga"].notna().sum())
+    store.PARAMS.write_text(json.dumps({**best.to_dict(), "blend_fit": "margin" in mix, "box_games_at_tune": has_box, "box_complete": BOX_DONE[0],
+                                        "mix_fit": mix, "tune_log": log}, indent=1, default=float))
     print("Chosen:", best.to_dict(), flush=True)
     return best
 
@@ -197,13 +207,16 @@ def update():
     games = pull(recent, games, force={d.strftime("%Y%m%d") for d in recent})
     print(f"{len(games)} games stored, {len(store.finished(games))} final", flush=True)
 
-    games, _ = backfill_lines(games, cur, budget=4500)
+    games, box_left = backfill_summaries(games, cur, budget=5000)
 
     # tune the first time, and again as soon as last season's lines are in (blend weights need them)
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
     last = store.finished(games)
     last_lines = int(last.loc[last["season"] == cur - 1, "spread"].notna().sum())
-    if not meta or (not meta.get("blend_fit") and last_lines >= 3000):
+    retune = not meta or (not meta.get("blend_fit") and last_lines >= 3000) \
+        or (box_left == 0 and not meta.get("box_complete"))  # all box scores in: fit the efficiency model
+    BOX_DONE[0] = box_left == 0
+    if retune:
         p = do_tune(games, cur)
         backtest.run_backtest(games, p, cur)
     p = load_params()
@@ -211,7 +224,7 @@ def update():
     now_utc = pd.Timestamp.now(tz="UTC")
     done = store.finished(games)
     pool = model.pooled_ids(done, p.pool_min)
-    ratings = model.fit(done[pd.to_datetime(done["date"], utc=True) < now_utc], now_utc, cur, p, pool)
+    ratings = model.fit_all(done[pd.to_datetime(done["date"], utc=True) < now_utc], now_utc, cur, p, pool)
     picks, slate = update_picks(games, ratings, pool, p, now_utc)
     bt = json.loads(store.BACKTEST.read_text()) if store.BACKTEST.exists() else {}
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}

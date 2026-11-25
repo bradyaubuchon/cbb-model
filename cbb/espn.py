@@ -124,16 +124,56 @@ def parse_odds(o, home_abbr, away_abbr):
 SUMMARY = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/summary"
 
 
-def summary_odds(event_id, home_abbr, away_abbr):
-    """Closing lines for a finished game. The scoreboard drops odds after tip; the game
-    summary keeps them under 'pickcenter'."""
+BOX_STATS = {
+    "fieldGoalsMade-fieldGoalsAttempted": ("fgm", "fga"),
+    "threePointFieldGoalsMade-threePointFieldGoalsAttempted": ("fg3m", "fg3a"),
+    "freeThrowsMade-freeThrowsAttempted": ("ftm", "fta"),
+    "offensiveRebounds": ("oreb",),
+    "totalTurnovers": ("to",),
+}
+BOX_COLS = [f"{side}_{k}" for side in ("h", "a") for k in ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "oreb", "to")]
+
+
+def _box_team(t):
+    out = {}
+    for st in t.get("statistics") or []:
+        keys = BOX_STATS.get(st.get("name"))
+        if not keys:
+            continue
+        parts = str(st.get("displayValue", "")).split("-")
+        if len(parts) != len(keys):
+            continue
+        for k, v in zip(keys, parts):
+            out[k] = _num(v)
+    if "to" not in out:  # older feeds: plain 'turnovers'
+        for st in t.get("statistics") or []:
+            if st.get("name") == "turnovers":
+                out["to"] = _num(st.get("displayValue"))
+    return out
+
+
+def summary(event_id, home_id, away_id, home_abbr, away_abbr):
+    """(closing odds, box score) for a finished game. The scoreboard drops odds after tip;
+    the game summary keeps them under 'pickcenter' along with team box scores."""
     if os.environ.get("CBB_FAKE"):
-        return None
-    d = _get_json(f"{SUMMARY}?event={event_id}")
-    pc = (d or {}).get("pickcenter") or []
-    if not pc:
-        return None
-    return parse_odds(_pick_odds({"odds": pc}), home_abbr, away_abbr)
+        from tests.fake_espn import fake_summary
+        d = fake_summary(event_id)
+    else:
+        d = _get_json(f"{SUMMARY}?event={event_id}")
+    d = d or {}
+    pc = d.get("pickcenter") or []
+    odds = parse_odds(_pick_odds({"odds": pc}), home_abbr, away_abbr) if pc else None
+    box = {}
+    for t in (d.get("boxscore") or {}).get("teams") or []:
+        tid = str(_dig(t, "team", "id"))
+        side = "h" if tid == str(home_id) else "a" if tid == str(away_id) else None
+        if side:
+            for k, v in _box_team(t).items():
+                box[f"{side}_{k}"] = v
+    need = ("h_fga", "h_fta", "h_oreb", "h_to", "a_fga", "a_fta", "a_oreb", "a_to")
+    if not all(box.get(k) is not None for k in need):
+        box = None
+    return odds, box
 
 
 def parse_event(e):

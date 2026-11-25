@@ -8,11 +8,17 @@ import numpy as np
 N = 360
 _rng = np.random.default_rng(7)
 TRUE = {}
-base_o, base_d = _rng.normal(0, 6, N), _rng.normal(0, 5, N)
+base_o, base_d = _rng.normal(0, 6, N), _rng.normal(0, 5, N)   # per 100 possessions
+base_t = _rng.normal(0, 2.5, N)                                # possessions added per game
+TEMPO = {}
 for s in (2025, 2026, 2027):  # strengths carry over ~60% year to year
     TRUE[s] = (base_o.copy(), base_d.copy())
+    TEMPO[s] = base_t.copy()
     base_o = 0.6 * base_o + _rng.normal(0, 4.5, N)
     base_d = 0.6 * base_d + _rng.normal(0, 3.5, N)
+    base_t = 0.7 * base_t + _rng.normal(0, 1.8, N)
+PPP, POSS = 104.0, 68.0
+BOX = {}
 MU, HCA, NOISE = 72.0, 3.2, 8.0
 TODAY = dt.date.today()
 
@@ -43,10 +49,12 @@ def fake_day(day):
         h, a = int(teams[2 * k]), int(teams[2 * k + 1])
         nonD1 = rng.random() < 0.05
         neutral = rng.random() < 0.1
-        adv = 0 if neutral else HCA / 2
-        aid, ao_, ad_ = (9000 + a, -14.0, 10.0) if nonD1 else (a, o[a], de[a])
-        hp = MU + o[h] + ad_ + adv
-        ap = MU + ao_ + de[h] - adv
+        adv = 0 if neutral else 4.6 / 2
+        aid, ao_, ad_, at_ = (9000 + a, -18.0, 14.0, 0.0) if nonD1 else (a, o[a], de[a], TEMPO[s][a])
+        poss = POSS + TEMPO[s][h] + at_
+        hp = poss * (PPP + o[h] + ad_ + adv) / 100
+        ap = poss * (PPP + ao_ + de[h] - adv) / 100
+        poss_act = poss + rng.normal(0, 3.0)
         true_margin = hp - ap
         mkt_margin = true_margin + rng.normal(0, 2.0)
         spread = round(-mkt_margin * 2) / 2
@@ -58,6 +66,12 @@ def fake_day(day):
         if hs == as_:
             hs += 1
         mlh, mla = _ml(spread)
+        if final:
+            box = {}
+            for side, pts in (("h", hs), ("a", as_)):
+                fta, to, oreb = int(rng.integers(12, 30)), int(rng.integers(7, 17)), int(rng.integers(5, 15))
+                fga = int(round(poss_act - to - 0.475 * fta + oreb))
+                box[side] = {"fga": fga, "fta": fta, "to": to, "oreb": oreb}
         fav_abbr = f"T{h}" if spread < 0 else f"T{aid}"
         odds = [] if rng.random() < 0.08 or nonD1 else [{
             "provider": {"name": "DraftKings"},
@@ -68,6 +82,8 @@ def fake_day(day):
             "pointSpread": {"home": {"open": {"line": f"{spread + 1:+.1f}"}}},
             "total": {"over": {"open": {"line": f"o{total - 1}"}}},
         }]
+        if final:
+            BOX[f"{day}{k:03d}"] = (str(h), str(aid), box, odds)
         events.append({
             "id": f"{day}{k:03d}", "date": tip.strftime("%Y-%m-%dT%H:%MZ"), "season": {"year": s},
             "competitions": [{
@@ -79,7 +95,23 @@ def fake_day(day):
                     {"homeAway": "away", "score": str(as_) if final else "0",
                      "team": {"id": str(aid), "shortDisplayName": f"Team {aid}", "abbreviation": f"T{aid}"}},
                 ],
-                "odds": odds,
+                "odds": [] if final else odds,  # like ESPN: lines vanish after tip
             }],
         })
     return events
+
+
+def fake_summary(event_id):
+    day = event_id[:8]
+    if event_id not in BOX:
+        fake_day(day)
+    if event_id not in BOX:
+        return {}
+    hid, aid, box, odds = BOX[event_id]
+    def team(tid, b):
+        return {"team": {"id": tid}, "statistics": [
+            {"name": "fieldGoalsMade-fieldGoalsAttempted", "displayValue": f"{int(b['fga'] * .45)}-{b['fga']}"},
+            {"name": "freeThrowsMade-freeThrowsAttempted", "displayValue": f"{int(b['fta'] * .7)}-{b['fta']}"},
+            {"name": "offensiveRebounds", "displayValue": str(b["oreb"])},
+            {"name": "totalTurnovers", "displayValue": str(b["to"])}]}
+    return {"pickcenter": odds, "boxscore": {"teams": [team(aid, box["a"]), team(hid, box["h"])]}}

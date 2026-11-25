@@ -49,10 +49,12 @@ def upsert_games(old, rows):
         prev = old.set_index("id")
         new = new.set_index("id")
         both = new.index.intersection(prev.index)
-        for col in ODDS_COLS:
-            if col in new.columns and col in prev.columns:
-                miss = new.loc[both, col].isna()
-                new.loc[both[miss.values], col] = prev.loc[both[miss.values], col]
+        # keep anything we already know (pre-tip odds, box scores) that the fresh pull lacks
+        for col in prev.columns:
+            if col not in new.columns:
+                new[col] = float("nan") if prev[col].dtype.kind in "fi" else None
+            miss = new.loc[both, col].isna()
+            new.loc[both[miss.values], col] = prev.loc[both[miss.values], col]
         out = pd.concat([prev.drop(index=both), new]).reset_index()
     out = out.sort_values(["date", "id"]).reset_index(drop=True)
     DATA.mkdir(exist_ok=True)
