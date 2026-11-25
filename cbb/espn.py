@@ -9,7 +9,9 @@ import os
 import time
 import urllib.request
 
-BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard"
+from . import store
+
+API = "https://site.api.espn.com/apis/site/v2/sports"
 LIMIT = 500  # ESPN silently truncates above ~1000; a day that fills the limit is an error
 HEADERS = {"User-Agent": "Mozilla/5.0 (personal cbb model)", "Accept": "application/json"}
 
@@ -30,8 +32,9 @@ def scoreboard(day):
     """Raw events for one ET calendar day, day = 'YYYYMMDD'."""
     if os.environ.get("CBB_FAKE"):
         from tests.fake_espn import fake_day
-        return fake_day(day)
-    data = _get_json(f"{BASE}?dates={day}&groups=50&limit={LIMIT}")
+        return fake_day(day, store.SPORT)
+    sp = store.SPORT
+    data = _get_json(f"{API}/{sp.espn}/scoreboard?dates={day}{sp.query}&limit={LIMIT}")
     events = data.get("events") if isinstance(data, dict) else None
     if not isinstance(events, list):
         raise RuntimeError(f"ESPN scoreboard {day}: no events list")
@@ -121,7 +124,6 @@ def parse_odds(o, home_abbr, away_abbr):
     return row
 
 
-SUMMARY = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/summary"
 
 
 BOX_STATS = {
@@ -157,9 +159,9 @@ def summary(event_id, home_id, away_id, home_abbr, away_abbr):
     the game summary keeps them under 'pickcenter' along with team box scores."""
     if os.environ.get("CBB_FAKE"):
         from tests.fake_espn import fake_summary
-        d = fake_summary(event_id)
+        d = fake_summary(event_id, store.SPORT)
     else:
-        d = _get_json(f"{SUMMARY}?event={event_id}")
+        d = _get_json(f"{API}/{store.SPORT.espn}/summary?event={event_id}")
     d = d or {}
     pc = d.get("pickcenter") or []
     odds = parse_odds(_pick_odds({"odds": pc}), home_abbr, away_abbr) if pc else None
@@ -177,6 +179,9 @@ def summary(event_id, home_id, away_id, home_abbr, away_abbr):
 
 
 def parse_event(e):
+    stype = _dig(e, "season", "type")
+    if stype is not None and stype not in (2, 3):  # regular season and postseason only
+        return None
     comp = (e.get("competitions") or [{}])[0]
     teams = {c.get("homeAway"): c for c in comp.get("competitors") or []}
     h, a = teams.get("home"), teams.get("away")

@@ -5,26 +5,29 @@ import hashlib
 
 import numpy as np
 
-N = 360
-_rng = np.random.default_rng(7)
-TRUE = {}
-base_o, base_d = _rng.normal(0, 6, N), _rng.normal(0, 5, N)   # per 100 possessions
-base_t = _rng.normal(0, 2.5, N)                                # possessions added per game
-TEMPO = {}
-for s in (2025, 2026, 2027):  # strengths carry over ~60% year to year
-    TRUE[s] = (base_o.copy(), base_d.copy())
-    TEMPO[s] = base_t.copy()
-    base_o = 0.6 * base_o + _rng.normal(0, 4.5, N)
-    base_d = 0.6 * base_d + _rng.normal(0, 3.5, N)
-    base_t = 0.7 * base_t + _rng.normal(0, 1.8, N)
-PPP, POSS = 104.0, 68.0
+# per sport: teams, games per game-day, which weekdays have games, possessions, pts/100, noise
+CFG = {"ncaam": (360, (20, 70), None, 68.0, 104.0, 8.0, 0.05),
+       "nba": (30, (4, 12), None, 99.0, 114.0, 9.0, 0.0),
+       "nfl": (32, (13, 16), {3, 6, 0}, 12.0, 190.0, 9.5, 0.0)}
+_STATE = {}
 BOX = {}
-MU, HCA, NOISE = 72.0, 3.2, 8.0
 TODAY = dt.date.today()
 
 
-def _season(d):
-    return d.year + 1 if d.month >= 7 else d.year
+def _truth(key):
+    if key not in _STATE:
+        n = CFG[key][0]
+        rng = np.random.default_rng(7 + len(key))
+        scale = 3.0 if key == "nfl" else 1.0
+        bo, bd, bt = rng.normal(0, 6 * scale, n), rng.normal(0, 5 * scale, n), rng.normal(0, 2.5 if key != "nfl" else 0.5, n)
+        true, tempo = {}, {}
+        for yr in range(2023, 2029):
+            true[yr], tempo[yr] = (bo.copy(), bd.copy()), bt.copy()
+            bo = 0.6 * bo + rng.normal(0, 4.5 * scale, n)
+            bd = 0.6 * bd + rng.normal(0, 3.5 * scale, n)
+            bt = 0.7 * bt + rng.normal(0, 1.8 if key != "nfl" else 0.3, n)
+        _STATE[key] = (true, tempo)
+    return _STATE[key]
 
 
 def _ml(spread_home):
@@ -35,28 +38,32 @@ def _ml(spread_home):
     return am(p), am(1 - p)
 
 
-def fake_day(day):
+def fake_day(day, sport):
+    key = sport.key
+    N, per_day, weekdays, POSS, PPP, NOISE, non_d1 = CFG[key]
     d = dt.datetime.strptime(day, "%Y%m%d").date()
-    s = _season(d)
-    if s not in TRUE or not (dt.date(s - 1, 11, 3) <= d <= dt.date(s, 3, 15)):
+    s = sport.season_of(d)
+    days = list(sport.season_days(s))
+    if not (days[3] <= d <= days[-25]) or (weekdays is not None and d.weekday() not in weekdays):
         return []
-    rng = np.random.default_rng(int(hashlib.md5(day.encode()).hexdigest()[:8], 16))
+    TRUE, TEMPO = _truth(key)
+    rng = np.random.default_rng(int(hashlib.md5((key + day).encode()).hexdigest()[:8], 16))
     o, de = TRUE[s]
-    n = int(rng.integers(20, 70))
+    n = min(int(rng.integers(*per_day)), N // 2)
     teams = rng.permutation(N)[: 2 * n]
     events = []
     for k in range(n):
         h, a = int(teams[2 * k]), int(teams[2 * k + 1])
-        nonD1 = rng.random() < 0.05
+        nonD1 = rng.random() < non_d1
         neutral = rng.random() < 0.1
         adv = 0 if neutral else 4.6 / 2
         aid, ao_, ad_, at_ = (9000 + a, -18.0, 14.0, 0.0) if nonD1 else (a, o[a], de[a], TEMPO[s][a])
         poss = POSS + TEMPO[s][h] + at_
         hp = poss * (PPP + o[h] + ad_ + adv) / 100
         ap = poss * (PPP + ao_ + de[h] - adv) / 100
-        poss_act = poss + rng.normal(0, 3.0)
+        poss_act = poss + rng.normal(0, 3.0 if key != "nfl" else 1.0)
         true_margin = hp - ap
-        mkt_margin = true_margin + rng.normal(0, 2.0)
+        mkt_margin = true_margin + rng.normal(0, 2.0 if key != "nfl" else 1.5)
         spread = round(-mkt_margin * 2) / 2
         total = round((hp + ap + rng.normal(0, 3)) * 2) / 2
         tip = dt.datetime.combine(d, dt.time(23, 0)) + dt.timedelta(minutes=int(rng.integers(0, 240)))
@@ -83,9 +90,9 @@ def fake_day(day):
             "total": {"over": {"open": {"line": f"o{total - 1}"}}},
         }]
         if final:
-            BOX[f"{day}{k:03d}"] = (str(h), str(aid), box, odds)
+            BOX[f"{day}{k:03d}{key}"] = (str(h), str(aid), box if key != "nfl" else None, odds)
         events.append({
-            "id": f"{day}{k:03d}", "date": tip.strftime("%Y-%m-%dT%H:%MZ"), "season": {"year": s},
+            "id": f"{day}{k:03d}{key}", "date": tip.strftime("%Y-%m-%dT%H:%MZ"), "season": {"year": s, "type": 2},
             "competitions": [{
                 "neutralSite": neutral, "conferenceCompetition": False,
                 "status": {"type": {"state": "post" if final else "pre", "completed": final}},
@@ -101,13 +108,15 @@ def fake_day(day):
     return events
 
 
-def fake_summary(event_id):
+def fake_summary(event_id, sport):
     day = event_id[:8]
     if event_id not in BOX:
-        fake_day(day)
+        fake_day(day, sport)
     if event_id not in BOX:
         return {}
     hid, aid, box, odds = BOX[event_id]
+    if box is None:
+        return {"pickcenter": odds}
     def team(tid, b):
         return {"team": {"id": tid}, "statistics": [
             {"name": "fieldGoalsMade-fieldGoalsAttempted", "displayValue": f"{int(b['fga'] * .45)}-{b['fga']}"},

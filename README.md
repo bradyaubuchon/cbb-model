@@ -1,6 +1,6 @@
-# CBB Model
+# Betting Model
 
-A personal men's college basketball betting model. It runs on GitHub Actions every 2 hours, at no cost. Each run:
+A personal betting model for men's college basketball, the NBA and the NFL. It runs on GitHub Actions every 2 hours, at no cost. Each run:
 
 1. Pulls ESPN's public D-I scoreboard, which carries scores plus the spread, total and moneyline ESPN shows (DraftKings).
 2. Fits offense and defense ratings for every team with weighted ridge regression on points scored. Recent games count more, and last season's games seed the early-season ratings.
@@ -19,7 +19,8 @@ Every Monday it re-tunes the rating knobs and the blend weights on last season, 
 ## Running locally
 ```
 pip install -r requirements.txt
-python -m cbb.run update      # pull data, price slate, write site
+python -m cbb.run update      # all sports: pull data, price slate, write site
+python -m cbb.run update nba  # one sport
 python -m cbb.run tune        # re-fit parameters + backtest
 CBB_FAKE=1 python -m cbb.run update   # offline test on simulated data
 ```

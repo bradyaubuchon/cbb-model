@@ -22,7 +22,7 @@ def main():
     picks = [g[g.season == 2026].iloc[3000], g[g.season == 2027].iloc[-50]]
     for r in picks:
         print("=" * 30, r["id"], r["date"], r["home"], "vs", r["away"])
-        d = espn._get_json(f"{espn.SUMMARY}?event={r['id']}")
+        d = espn._get_json(f"{espn.API}/{store.SPORT.espn}/summary?event={r['id']}")
         print("TOP KEYS:", list(d.keys()))
         print("--- pickcenter"); print(json.dumps(d.get("pickcenter"), indent=1)[:3500])
         print("--- odds"); print(json.dumps(d.get("odds"), indent=1)[:1500])

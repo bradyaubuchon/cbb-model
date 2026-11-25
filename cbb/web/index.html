@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CBB Model</title>
+<title>Betting Model</title>
 <meta name="theme-color" content="#14213D">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="CBB Model">
+<meta name="apple-mobile-web-app-title" content="Bet Model">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -35,6 +35,8 @@ a{color:var(--signal)}
 .top{padding:18px 20px 6px;max-width:640px;margin:auto}
 .top h1{font:700 30px/1 var(--cond);margin:0;letter-spacing:.2px}
 .top p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.seg.sports{margin:12px 0 2px;display:flex;width:100%}
+.seg.sports button{flex:1}
 main{max-width:640px;margin:auto;padding:4px 16px 24px}
 h2{font:700 22px/1.2 var(--cond);margin:28px 4px 10px}
 h3{font:600 17px/1.3 Barlow,sans-serif;margin:0 0 6px}
@@ -142,7 +144,8 @@ footer{max-width:640px;margin:20px auto 0;padding:0 20px;color:var(--muted);font
 </style>
 </head>
 <body>
-<header class="top"><h1>CBB Model</h1><p id="stamp">Loading…</p></header>
+<header class="top"><h1>Betting Model</h1><p id="stamp">Loading…</p>
+  <div class="seg sports" role="group" aria-label="Sport" id="sports"></div></header>
 <main id="m" aria-live="polite"></main>
 <footer id="foot"></footer>
 
@@ -159,6 +162,9 @@ footer{max-width:640px;margin:20px auto 0;padding:0 20px;color:var(--muted);font
 
 <script>
 const APP = "__APP_VERSION__";
+const SPORTS = [["ncaam", "College"], ["nba", "NBA"], ["nfl", "NFL"]];
+let sport = (() => { try { return localStorage.getItem("sport") || "ncaam"; } catch (e) { return "ncaam"; } })();
+let VER = null;
 let D = null, dataVer = null, view = (location.hash.slice(1) || "tonight"), season = "this_season", teamQ = "";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -180,10 +186,31 @@ async function getJSON(u) {
 /* ---------- version control ---------- */
 async function load() {
   const v = await getJSON("version.json");
-  D = await getJSON("data.json");
-  dataVer = v.data;
+  VER = v;
   if (v.app !== APP) return offerUpdate("app", v);
-  render();
+  if (!(v.sports || {})[sport]) sport = "ncaam";
+  await loadSport();
+}
+async function loadSport() {
+  $("#m").innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    D = await getJSON("data-" + sport + ".json");
+    dataVer = ((VER && VER.sports) || {})[sport] ? VER.sports[sport].v : null;
+    render();
+  } catch (e) {
+    D = null;
+    $("#stamp").textContent = "";
+    $("#m").innerHTML = `<div class="empty"><b>${SPORTS.find(s => s[0] === sport)[1]} isn't ready yet.</b>The first download of past seasons takes one or two update runs. Check back in a couple of hours.</div>`;
+    drawSports();
+  }
+}
+function drawSports() {
+  $("#sports").innerHTML = SPORTS.map(([k, label]) => `<button type="button" data-sp="${k}" aria-pressed="${k === sport}">${label}</button>`).join("");
+  document.querySelectorAll("[data-sp]").forEach(b => b.onclick = () => {
+    if (b.dataset.sp === sport) return;
+    sport = b.dataset.sp; try { localStorage.setItem("sport", sport); } catch (e) {}
+    season = "this_season"; teamQ = ""; loadSport();
+  });
 }
 let pending = null;
 function offerUpdate(kind, v) {
@@ -195,15 +222,16 @@ function offerUpdate(kind, v) {
 $("#upd").onclick = async () => {
   if (!pending) return;
   if (pending.kind === "app") { location.replace("./?v=" + encodeURIComponent(pending.v.app) + location.hash); return; }
-  D = await getJSON("data.json"); dataVer = pending.v.data; pending = null;
+  VER = pending.v; pending = null;
   const b = $("#upd"); b.classList.remove("show"); b.setAttribute("aria-hidden", "true"); b.tabIndex = -1;
-  render();
+  await loadSport();
 };
 async function pollVersion() {
   try {
     const v = await getJSON("version.json");
+    const cur = (v.sports || {})[sport];
     if (v.app !== APP) offerUpdate("app", v);
-    else if (dataVer && v.data !== dataVer) offerUpdate("data", v);
+    else if (cur && dataVer && cur.v !== dataVer) offerUpdate("data", {...v, updated: cur.updated});
   } catch (e) {}
 }
 setInterval(pollVersion, 3 * 60 * 1000);
@@ -271,7 +299,7 @@ function tonight() {
   const F = flagged();
   let h = trustBlock(true);
   h += `<h2>Best bets</h2><p class="lede">Games where our number and DraftKings' line disagree enough to be worth a look. Biggest edge first.</p>`;
-  if (!F.length) h += `<div class="empty"><b>No bets clear the bar right now.</b>That's normal. Picks show up when DraftKings posts lines that differ from our numbers by enough. Check back closer to tip-off.</div>`;
+  if (!F.length) h += `<div class="empty"><b>No bets clear the bar right now.</b>That's normal. Picks show up when DraftKings posts lines that differ from our numbers by enough. Check back closer to game time.</div>`;
   for (const {g, mk, b} of F) {
     const t = tier(b.ev), thin = Math.min(g.home_games, g.away_games) < 5;
     h += `<article class="ticket ${t.cls}">
@@ -285,7 +313,7 @@ function tonight() {
         ${thin ? '<p class="note-thin">One team has played fewer than 5 games, so its rating still leans on last season.</p>' : ""}
       </div></article>`;
   }
-  h += `<h2>All games</h2><p class="lede">Next 40 hours. Tap a game for our prediction. A dot means there's a flagged bet.</p>`;
+  h += `<h2>All games</h2><p class="lede">Next ${D.horizon_h >= 100 ? Math.round(D.horizon_h / 24) + " days" : D.horizon_h + " hours"}. Tap a game for our prediction. A dot means there's a flagged bet.</p>`;
   if (!D.slate.length) h += `<div class="empty"><b>No games on the board.</b>Games appear here once ESPN lists them.</div>`;
   else {
     h += `<div class="games">`;
@@ -316,7 +344,7 @@ function tonight() {
     <dt>Moneyline</dt><dd>A bet on who wins outright. +150 pays $150 on a $100 bet; −150 means you bet $150 to win $100.</dd>
     <dt>Edge</dt><dd>How much we expect to win per dollar bet, using our numbers instead of DraftKings'. +4% means about 4 cents per dollar over the long run, if our numbers are right.</dd>
     <dt>Units</dt><dd>Profit counted in bet sizes. If you bet $10 a game, +3 units is +$30.</dd>
-    <dt>Closing line value</dt><dd>Whether the line moved toward our pick before tip-off. Beating the closing line regularly is the best early sign that an edge is real.</dd>
+    <dt>Closing line value</dt><dd>Whether the line moved toward our pick before the game started. Beating the closing line regularly is the best early sign that an edge is real.</dd>
   </dl></details>`;
   $("#m").innerHTML = h;
   document.querySelectorAll(".game>button").forEach(b => b.onclick = () => {
@@ -369,7 +397,7 @@ function checkView() {
     h += `<section class="panel"><h3>Moneylines</h3>${D.params.ml_flag ? "" : `<p class="sub">Moneyline bets are no longer flagged: in testing they lost money, so treat moneyline edges as unreliable.</p>`}${c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} per bet (likely range ${spct(c.roi - 2 * c.se, 0)} to ${spct(c.roi + 2 * c.se, 0)}).</p>` : `<p class="sub">No flagged bets in this period.</p>`}${details(s, "ml")}</section>`;
   }
   const p = D.params;
-  h += `<p class="fine">How the forecast is built: ${Math.round(100 * (1 - p.mix_margin))}% points model and ${Math.round(100 * p.mix_margin)}% efficiency model, then blended ${Math.round(100 * p.w_margin)}% with ${Math.round(100 * (1 - p.w_margin))}% DraftKings for margins (totals ${Math.round(100 * p.w_total)}/${Math.round(100 * (1 - p.w_total))}). All weights are fit on last season. Home court is worth ${n1(D.hca)} points.</p>`;
+  h += `<p class="fine">How the forecast is built: ${Math.round(100 * (1 - p.mix_margin))}% points model and ${Math.round(100 * p.mix_margin)}% efficiency model, then blended ${Math.round(100 * p.w_margin)}% with ${Math.round(100 * (1 - p.w_margin))}% DraftKings for margins (totals ${Math.round(100 * p.w_total)}/${Math.round(100 * (1 - p.w_total))}). All weights are fit on last season. ${D.home_word ? D.home_word[0].toUpperCase() + D.home_word.slice(1) : "Home court"} is worth ${n1(D.hca)} points.</p>`;
   $("#m").innerHTML = h;
   document.querySelectorAll(".seg button").forEach(b => b.onclick = () => { season = b.dataset.s; checkView(); });
 }
@@ -394,7 +422,7 @@ function details(s, mk) {
 function teams() {
   const E = D.ratings.length && D.ratings[0].adj_o != null;
   const list = (E ? [...D.ratings].sort((a, b) => b.adj_em - a.adj_em) : D.ratings).map((r, i) => ({...r, rank: i + 1}));
-  let h = `<h2>Team ratings</h2><p class="lede">${E ? "Points per 100 possessions against an average Division I team. Offense: points scored. Defense: points allowed (lower is better). Pace: possessions per game." : "Points per game above or below an average Division I team."}</p>
+  let h = `<h2>Team ratings</h2><p class="lede">${E ? "Points per 100 possessions against an average team. Offense: points scored. Defense: points allowed (lower is better). Pace: possessions per game." : "Points per game above or below an average team."}</p>
     <input class="search" id="q" type="search" placeholder="Find a team" value="${esc(teamQ)}" aria-label="Find a team">
     <div class="tbl-wrap"><table class="data" id="tt"></table></div>`;
   $("#m").innerHTML = h;
@@ -412,6 +440,7 @@ function teams() {
 const V = {tonight, results, check: checkView, teams};
 function render() {
   if (!V[view]) view = "tonight";
+  drawSports();
   $("#stamp").textContent = "Updated " + D.updated;
   document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-current", b.dataset.v === view ? "page" : "false"));
   V[view]();

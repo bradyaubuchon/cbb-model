@@ -1,4 +1,4 @@
-"""Entry point.  python -m cbb.run update | tune | backtest"""
+"""Entry point.  python -m cbb.run update|tune|backtest [ncaam,nba,nfl]"""
 import datetime as dt
 import json
 import os
@@ -8,12 +8,16 @@ import time
 import pandas as pd
 
 from . import backtest, espn, model, site, store
+from .sports import ORDER
 
-FETCHED = store.DATA / "fetched_days.txt"
+
+def _fetched_file():
+    return store.DATA / "fetched_days.txt"
 
 
 def _fetched():
-    return set(FETCHED.read_text().split()) if FETCHED.exists() else set()
+    f = _fetched_file()
+    return set(f.read_text().split()) if f.exists() else set()
 
 
 def pull(days, games, force=()):
@@ -34,23 +38,22 @@ def pull(days, games, force=()):
         if n % 25 == 0:  # checkpoint long backfills
             games = store.upsert_games(games, rows)
             rows = []
-            FETCHED.write_text("\n".join(sorted(done)))
+            _fetched_file().write_text("\n".join(sorted(done)))
             print(f"  ...{n} days fetched", flush=True)
         if not os.environ.get("CBB_FAKE"):
             time.sleep(0.4)  # ESPN rate-limits bursts
     games = store.upsert_games(games, rows)
-    store.DATA.mkdir(exist_ok=True)
-    FETCHED.write_text("\n".join(sorted(done)))
+    _fetched_file().write_text("\n".join(sorted(done)))
     return games
 
 
-SUMMARY_CHECKED = store.DATA / "summary_checked.txt"
 BOX_DONE = [False]
 
 
 def backfill_summaries(games, cur, budget):
     """Fill box scores (and closing lines where missing) for finished games from ESPN game
     summaries, a batch per run: last season first, then this season, then the season before."""
+    SUMMARY_CHECKED = store.DATA / "summary_checked.txt"
     checked = set(SUMMARY_CHECKED.read_text().split()) if SUMMARY_CHECKED.exists() else set()
     for col in espn.BOX_COLS:
         if col not in games.columns:
@@ -124,7 +127,7 @@ def do_tune(games, cur):
 def update_picks(games, ratings, pool, p, now_utc):
     picks = json.loads(store.PICKS.read_text()) if store.PICKS.exists() else {}
     t = pd.to_datetime(games["date"], utc=True)
-    upcoming = games[(games["state"] == "pre") & (t > now_utc) & (t < now_utc + pd.Timedelta(hours=40))]
+    upcoming = games[(games["state"] == "pre") & (t > now_utc) & (t < now_utc + pd.Timedelta(hours=store.SPORT.horizon_h))]
     slate = []
     for g in upcoming.to_dict("records"):
         mg, tot, hp, ap = ratings.predict(g["home_id"], g["away_id"], g["neutral"] == 1, pool)
@@ -193,7 +196,9 @@ def record(picks, p):
     return out
 
 
-def update():
+def update(sport, budget):
+    store.set_sport(sport)
+    print(f"\n===== {store.SPORT.name} =====", flush=True)
     now = store.now_et()
     today = now.date()
     cur = store.season_of(today)
@@ -207,13 +212,16 @@ def update():
     games = pull(recent, games, force={d.strftime("%Y%m%d") for d in recent})
     print(f"{len(games)} games stored, {len(store.finished(games))} final", flush=True)
 
-    games, box_left = backfill_summaries(games, cur, budget=5000)
+    if games.empty:
+        print("No games yet.", flush=True)
+        return None
+    games, box_left = backfill_summaries(games, cur, budget=budget)
 
     # tune the first time, and again as soon as last season's lines are in (blend weights need them)
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
     last = store.finished(games)
     last_lines = int(last.loc[last["season"] == cur - 1, "spread"].notna().sum())
-    retune = not meta or (not meta.get("blend_fit") and last_lines >= 3000) \
+    retune = not meta or (not meta.get("blend_fit") and last_lines >= store.SPORT.min_lines_to_tune) \
         or (box_left == 0 and not meta.get("box_complete"))  # all box scores in: fit the efficiency model
     BOX_DONE[0] = box_left == 0
     if retune:
@@ -228,24 +236,43 @@ def update():
     picks, slate = update_picks(games, ratings, pool, p, now_utc)
     bt = json.loads(store.BACKTEST.read_text()) if store.BACKTEST.exists() else {}
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
-    site.render(slate, ratings, record(picks, p), bt, p, now, calibrated=bool(meta.get("blend_fit")))
+    ver = site.render(sport, slate, ratings, record(picks, p), bt, p, now, calibrated=bool(meta.get("blend_fit")))
     print(f"Slate: {len(slate)} games priced. Site written.", flush=True)
+    return ver
+
+
+def run_all(cmd, only=None):
+    """Each sport runs on its own; one sport failing never blocks the others."""
+    store.migrate_legacy()
+    versions = {}
+    # ESPN summary fetches are the slow part (~0.5s each): share one budget per run
+    budget = {"ncaam": 4000, "nba": 2500, "nfl": 1500}
+    for sport in (only or ORDER):
+        try:
+            if cmd in ("tune", "backtest"):
+                store.set_sport(sport)
+                games = store.load_games()
+                if not games.empty:
+                    cur = store.season_of(store.now_et().date())
+                    p = do_tune(games, cur) if cmd == "tune" else load_params()
+                    backtest.run_backtest(games, p, cur)
+            versions[sport] = update(sport, budget[sport])
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"!! {sport} failed: {e}", flush=True)
+    site.write_version(versions)
 
 
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "update"
-    if cmd == "update":
-        update()
-    elif cmd == "diag":
+    only = sys.argv[2].split(",") if len(sys.argv) > 2 else None
+    if cmd == "diag":
         from . import diag
+        store.set_sport((only or ["ncaam"])[0])
         diag.main()
-    elif cmd in ("tune", "backtest"):
-        cur = store.season_of(store.now_et().date())
-        games = store.load_games()
-        p = do_tune(games, cur) if cmd == "tune" else load_params()
-        rep = backtest.run_backtest(games, p, cur)
-        print(json.dumps({k: v for k, v in rep.get("this_season", {}).items() if k != "buckets"}, indent=1))
-        update()
+    elif cmd in ("update", "tune", "backtest"):
+        run_all(cmd, only)
     else:
         print(__doc__)
 

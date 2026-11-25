@@ -20,7 +20,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 90   # the first run backfills ~2 seasons of ESPN data (~20-30 min)
+    timeout-minutes: 150  # a new sport's first run backfills ~3 seasons of ESPN data
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

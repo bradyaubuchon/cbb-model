@@ -5,29 +5,44 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
+from .sports import SPORTS
+
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data"
-GAMES = DATA / "games.csv"
-PICKS = DATA / "picks.json"
-PARAMS = DATA / "params.json"
-BACKTEST = DATA / "backtest.json"
 ET = ZoneInfo("America/New_York")
+SPORT = SPORTS["ncaam"]
+DATA = GAMES = PICKS = PARAMS = BACKTEST = None
+
+
+def set_sport(key):
+    """Point every path at data/<sport>/. The pipeline runs one sport at a time."""
+    global SPORT, DATA, GAMES, PICKS, PARAMS, BACKTEST
+    SPORT = SPORTS[key]
+    DATA = ROOT / "data" / key
+    GAMES, PICKS = DATA / "games.csv", DATA / "picks.json"
+    PARAMS, BACKTEST = DATA / "params.json", DATA / "backtest.json"
+    DATA.mkdir(parents=True, exist_ok=True)
+
+
+def migrate_legacy():
+    """Before multi-sport, college data lived directly in data/. Move it to data/ncaam/."""
+    old = ROOT / "data"
+    files = [f for f in old.iterdir() if f.is_file()] if old.exists() else []
+    if files:
+        dest = old / "ncaam"
+        dest.mkdir(exist_ok=True)
+        for f in files:
+            f.rename(dest / f.name)
 
 ODDS_COLS = ["book", "spread", "spread_open", "spread_home_odds", "spread_away_odds", "total",
              "total_open", "over_odds", "under_odds", "ml_home", "ml_away"]
 
 
 def season_of(day):
-    """ESPN season year: the 2026-27 season is 2027."""
-    return day.year + 1 if day.month >= 7 else day.year
+    return SPORT.season_of(day)
 
 
 def season_days(season):
-    """Every ET calendar day that can hold a D-I game (Nov 1 through the title game)."""
-    d, end = dt.date(season - 1, 11, 1), dt.date(season, 4, 10)
-    while d <= end:
-        yield d
-        d += dt.timedelta(days=1)
+    return SPORT.season_days(season)
 
 
 def load_games():
