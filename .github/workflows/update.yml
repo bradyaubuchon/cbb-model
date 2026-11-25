@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # lets the run start the next one (GitHub's own schedule is unreliable)
 
 concurrency:
   group: update
@@ -44,3 +45,25 @@ jobs:
           git diff --cached --quiet || git commit -m "update $(date -u +%FT%H:%MZ)"
           git pull --rebase -X theirs origin main   # code may have been pushed during the run
           git push
+
+  # Keep-alive: GitHub often skips scheduled runs, so each run starts the next one ~45 min later.
+  # Skips if another run is already queued or running, so there's only ever one chain.
+  next:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Wait, then start the next update
+        run: |
+          sleep 2700
+          others=$(gh run list -R "$GITHUB_REPOSITORY" -w update.yml --json databaseId,status \
+                   --jq "[.[] | select((.status==\"queued\" or .status==\"in_progress\" or .status==\"pending\") and .databaseId != ${{ github.run_id }})] | length")
+          if [ "$others" = "0" ]; then
+            gh workflow run update.yml -R "$GITHUB_REPOSITORY" -f mode=update
+            echo "started next run"
+          else
+            echo "another run is already queued; not starting a second chain"
+          fi
