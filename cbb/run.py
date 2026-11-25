@@ -138,7 +138,7 @@ def update_picks(games, ratings, pool, p, now_utc):
                                     "first": snap}
         if rec is not None:
             rec["last"] = snap
-        slate.append({**{k: g.get(k) for k in ("id", "date", "home", "away", "neutral", "spread", "total",
+        slate.append({**{k: g.get(k) for k in ("id", "date", "home", "away", "home_abbr", "away_abbr", "neutral", "spread", "total",
                                                "ml_home", "ml_away", "book", "spread_open", "total_open")},
                       "pred_home": hp, "pred_away": ap, "pred_margin": mg, "pred_total": tot,
                       "blend_margin": model.blend(mg, tot, g, p)[0], "blend_total": model.blend(mg, tot, g, p)[1],

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CBB Model</title>
+<meta name="theme-color" content="#14213D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CBB Model">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F3; --surface:#FFFFFF; --ink:#14213D; --muted:#5B6577; --rule:#D5DAE1;
+  --edge:#0B7A55; --edge-bg:#E3F3EC; --lean:#9A5F0C; --lean-bg:#FBF0DC; --signal:#2F5BEA; --bad:#B42318;
+  --nav:#FFFFFF; --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#0E1726; --surface:#16223A; --ink:#E7ECF3; --muted:#94A0B4; --rule:#26344F;
+  --edge:#3CCB8F; --edge-bg:#12352B; --lean:#E3A646; --lean-bg:#3A2C12; --signal:#86A8FF; --bad:#FF8A80; --nav:#121D31;
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;
+  padding:calc(var(--safe-t)) 0 calc(76px + var(--safe-b))}
+button{font:inherit;color:inherit}
+a{color:var(--signal)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:4px}
+
+.top{padding:18px 20px 6px;max-width:640px;margin:auto}
+.top h1{font:700 30px/1 var(--cond);margin:0;letter-spacing:.2px}
+.top p{margin:4px 0 0;color:var(--muted);font-size:14px}
+main{max-width:640px;margin:auto;padding:4px 16px 24px}
+h2{font:700 22px/1.2 var(--cond);margin:28px 4px 10px}
+h3{font:600 17px/1.3 Barlow,sans-serif;margin:0 0 6px}
+.lede{color:var(--muted);margin:-4px 4px 14px;font-size:15px}
+
+/* update bar */
+.update{position:fixed;left:12px;right:12px;bottom:calc(84px + var(--safe-b));max-width:616px;margin:auto;
+  display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--paper);border:0;border-radius:14px;
+  padding:14px 16px;text-align:left;width:auto;cursor:pointer;box-shadow:0 8px 24px rgba(20,33,61,.28);
+  transform:translateY(160%);transition:transform .35s cubic-bezier(.2,.9,.3,1.2)}
+.update.show{transform:none}
+.update b{display:block;font-weight:600}
+.update span{font-size:14px;opacity:.8}
+.update .go{margin-left:auto;font:700 18px/1 var(--cond);background:var(--paper);color:var(--ink);padding:9px 14px;border-radius:99px;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.update{transition:none}}
+
+/* trust verdict */
+.trust{border-left:4px solid var(--lean);background:var(--surface);padding:14px 16px;border-radius:4px 12px 12px 4px;margin:12px 0 4px}
+.trust.good{border-color:var(--edge)}
+.trust.wait{border-color:var(--muted)}
+.trust h3{margin-bottom:4px}
+.trust p{margin:0;color:var(--muted);font-size:15px}
+.trust button{background:none;border:0;padding:0;margin-top:8px;color:var(--signal);font-weight:600;cursor:pointer}
+
+/* ticket: the one bold element */
+.ticket{position:relative;background:var(--surface);border-radius:14px;margin:0 0 14px;overflow:hidden}
+.ticket .head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 10px;font-size:14px;color:var(--muted)}
+.ticket .head strong{color:var(--ink);font-weight:600}
+.ticket .perf{position:relative;height:0;border-top:2px dashed var(--rule);margin:0 16px}
+.ticket .perf::before,.ticket .perf::after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--paper)}
+.ticket .perf::before{left:-26px}.ticket .perf::after{right:-26px}
+.ticket .main{padding:12px 16px 16px;display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:start}
+.pick{font:700 38px/1 var(--cond);letter-spacing:.2px;margin:2px 0 6px}
+.pick small{font:600 18px var(--cond);color:var(--muted);margin-left:6px}
+.matchup{margin:0;font-weight:500}
+.why{margin:6px 0 0;color:var(--muted);font-size:15px;grid-column:1/-1}
+.edge{text-align:right;border-radius:10px;padding:8px 10px;min-width:86px}
+.edge b{display:block;font:700 26px/1 var(--cond)}
+.edge span{font-size:13px;font-weight:600}
+.t-big .edge{background:var(--edge-bg);color:var(--edge)}
+.t-small .edge{background:var(--lean-bg);color:var(--lean)}
+.note-thin{grid-column:1/-1;margin:6px 0 0;font-size:14px;color:var(--lean)}
+
+.empty{background:var(--surface);border-radius:12px;padding:18px 16px;color:var(--muted)}
+.empty b{color:var(--ink);display:block;margin-bottom:4px}
+
+/* game list */
+.games{background:var(--surface);border-radius:12px;overflow:hidden}
+.game{border-top:1px solid var(--rule)}
+.game:first-child{border-top:0}
+.game>button{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:center;width:100%;background:none;border:0;padding:12px 14px;text-align:left;cursor:pointer}
+.game .time{font:600 16px var(--cond);color:var(--muted)}
+.game .teams{line-height:1.3}
+.game .teams span{display:block}
+.game .line{text-align:right;font:600 17px var(--cond)}
+.game .line .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--edge);margin-right:6px;vertical-align:2px}
+.game .line .dot.small{background:var(--lean)}
+.game .detail{display:none;padding:0 14px 14px 86px;font-size:15px}
+.game.open .detail{display:block}
+.score{margin:0 0 8px;color:var(--muted)}
+.mkts{width:100%;border-collapse:collapse}
+.mkts td{padding:6px 0;border-top:1px solid var(--rule)}
+.mkts td:last-child{text-align:right;font-weight:600}
+.pos{color:var(--edge)} .neg{color:var(--muted)}
+
+/* glossary */
+details.gloss{background:var(--surface);border-radius:12px;padding:4px 16px;margin-top:28px}
+details.gloss summary{cursor:pointer;padding:12px 0;font-weight:600}
+dl{margin:0 0 12px}dt{font-weight:600;margin-top:10px}dd{margin:2px 0 0;color:var(--muted);font-size:15px}
+
+/* results / model check */
+.panel{background:var(--surface);border-radius:12px;padding:16px;margin-bottom:12px}
+.big{font:700 34px/1.05 var(--cond)}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.sub{color:var(--muted);font-size:15px;margin:4px 0 0}
+.bars{margin:12px 0 4px}
+.bar{display:grid;grid-template-columns:118px 1fr 52px;gap:10px;align-items:center;margin:6px 0;font-size:15px}
+.bar i{display:block;height:12px;border-radius:6px;background:var(--rule)}
+.bar i b{display:block;height:100%;border-radius:6px;background:var(--ink)}
+.bar.mkt i b{background:var(--muted)}
+.bar span:last-child{text-align:right;font-weight:600}
+.seg{display:inline-flex;background:var(--surface);border-radius:99px;padding:4px;margin:4px 0 8px}
+.seg button{border:0;background:none;padding:8px 14px;border-radius:99px;cursor:pointer;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+details.more summary{cursor:pointer;color:var(--signal);font-weight:600;margin-top:10px}
+table.data{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px;font-variant-numeric:tabular-nums}
+table.data th,table.data td{padding:7px 4px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data th{color:var(--muted);font-weight:600}
+.fine{color:var(--muted);font-size:13px;margin:14px 4px 0}
+
+/* teams */
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);font:inherit;margin-bottom:10px}
+.tbl-wrap{background:var(--surface);border-radius:12px;padding:4px 12px}
+
+/* bottom nav */
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--nav);border-top:1px solid var(--rule);
+  display:flex;justify-content:center;padding:6px 6px calc(6px + var(--safe-b));z-index:5}
+nav .in{display:flex;width:100%;max-width:640px}
+nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer}
+nav button svg{width:24px;height:24px}
+nav button[aria-current=page]{color:var(--ink)}
+nav button[aria-current=page] svg{color:var(--signal)}
+footer{max-width:640px;margin:20px auto 0;padding:0 20px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header class="top"><h1>CBB Model</h1><p id="stamp">Loading…</p></header>
+<main id="m" aria-live="polite"></main>
+<footer id="foot"></footer>
+
+<button class="update" id="upd" type="button" aria-hidden="true" tabindex="-1">
+  <div><b id="updTitle">Update ready</b><span id="updText"></span></div><span class="go">Tap to update</span>
+</button>
+
+<nav aria-label="Sections"><div class="in">
+  <button data-v="tonight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M15 6v12" stroke-dasharray="2 2"/></svg>Tonight</button>
+  <button data-v="results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>My results</button>
+  <button data-v="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Model check</button>
+  <button data-v="teams"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Teams</button>
+</div></nav>
+
+<script>
+const APP = "__APP_VERSION__";
+let D = null, dataVer = null, view = (location.hash.slice(1) || "tonight"), season = "this_season", teamQ = "";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const n1 = x => x == null ? "–" : (+x).toFixed(1).replace(/\.0$/, "");
+const sgn = x => x == null ? "–" : (x > 0 ? "+" : x < 0 ? "−" : "") + n1(Math.abs(x));
+const am = x => x == null ? "" : (x > 0 ? "+" : "−") + Math.abs(Math.round(x));
+const pct = (x, d = 1) => x == null ? "–" : (x >= 0 ? "" : "−") + Math.abs(x * 100).toFixed(d) + "%";
+const spct = (x, d = 1) => x == null ? "–" : (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x * 100).toFixed(d) + "%";
+const tm = iso => new Date(iso).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit", timeZone: "America/New_York"});
+const day = iso => new Date(iso).toLocaleDateString("en-US", {weekday: "short", timeZone: "America/New_York"});
+const MK = {spread: "Spread", total: "Total", ml: "Moneyline"};
+
+async function getJSON(u) {
+  const r = await fetch(u + "?t=" + Date.now(), {cache: "no-store"});
+  if (!r.ok) throw new Error(u + " " + r.status);
+  return r.json();
+}
+
+/* ---------- version control ---------- */
+async function load() {
+  const v = await getJSON("version.json");
+  D = await getJSON("data.json");
+  dataVer = v.data;
+  if (v.app !== APP) return offerUpdate("app", v);
+  render();
+}
+let pending = null;
+function offerUpdate(kind, v) {
+  pending = {kind, v};
+  $("#updTitle").textContent = kind === "app" ? "New version of the app" : "New picks and lines are in";
+  $("#updText").textContent = kind === "app" ? "Version " + v.app.split("-")[0] + " is ready." : "Updated " + v.updated + ".";
+  const b = $("#upd"); b.classList.add("show"); b.removeAttribute("aria-hidden"); b.tabIndex = 0;
+}
+$("#upd").onclick = async () => {
+  if (!pending) return;
+  if (pending.kind === "app") { location.replace("./?v=" + encodeURIComponent(pending.v.app) + location.hash); return; }
+  D = await getJSON("data.json"); dataVer = pending.v.data; pending = null;
+  const b = $("#upd"); b.classList.remove("show"); b.setAttribute("aria-hidden", "true"); b.tabIndex = -1;
+  render();
+};
+async function pollVersion() {
+  try {
+    const v = await getJSON("version.json");
+    if (v.app !== APP) offerUpdate("app", v);
+    else if (dataVer && v.data !== dataVer) offerUpdate("data", v);
+  } catch (e) {}
+}
+setInterval(pollVersion, 3 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pollVersion(); });
+
+/* ---------- shared helpers ---------- */
+function teamOf(g, side) { return side === "home" ? g.home : g.away; }
+function tier(ev) { return ev >= 0.07 ? {cls: "t-big", label: "Bigger edge"} : {cls: "t-small", label: "Small edge"}; }
+function pickText(g, mk, b) {
+  if (mk === "spread") return esc(teamOf(g, b.side)) + " " + sgn(b.line);
+  if (mk === "total") return (b.side === "over" ? "Over " : "Under ") + n1(b.line);
+  return esc(teamOf(g, b.side)) + " to win";
+}
+function whyText(g, mk, b) {
+  if (mk === "spread") {
+    const t = esc(teamOf(g, b.side)), ours = b.side === "home" ? g.blend_margin : -g.blend_margin, dk = b.line;
+    const a = ours >= 0 ? `We think ${t} wins by ${n1(ours)}.` : `We think ${t} loses by ${n1(-ours)}.`;
+    const c = dk < 0 ? `DraftKings has them favored by ${n1(-dk)}.` : dk > 0 ? `DraftKings has them as ${n1(dk)}-point underdogs.` : "DraftKings has it even.";
+    return a + " " + c;
+  }
+  if (mk === "total") return `We expect about ${Math.round(g.blend_total)} total points. DraftKings set the line at ${n1(b.line)}.`;
+  return `We put ${esc(teamOf(g, b.side))}'s chance of winning at ${Math.round(b.p * 100)}%. DraftKings' price implies ${Math.round(b.market_p * 100)}%.`;
+}
+function flagged() {
+  const out = [];
+  for (const g of D.slate) for (const mk of ["spread", "total", "ml"]) {
+    const b = g.bets && g.bets[mk];
+    if (b && b.ev >= D.params.min_ev) out.push({g, mk, b});
+  }
+  return out.sort((a, b) => b.b.ev - a.b.ev);
+}
+function combine(rows) { // pool EV buckets at or above the flag threshold
+  let n = 0, units = 0, v = 0;
+  for (const r of rows || []) {
+    const lo = parseFloat(r.ev) / 100;
+    if (!r.n || lo < D.params.min_ev - 1e-9) continue;
+    n += r.n; units += r.units; v += Math.pow((r.roi_se || 0) * r.n, 2);
+  }
+  return n ? {n, roi: units / n, se: Math.sqrt(v) / n} : null;
+}
+function trust() {
+  if (!D.calibrated) return {cls: "wait", title: "Still calibrating", text: "The model is still loading past results. Treat tonight's numbers as rough and don't bet off them yet."};
+  const B = D.backtest || {}, s = (B.this_season && B.this_season.n_spread_lines > 500) ? B.this_season : B.last_season;
+  if (!s || !s.buckets) return {cls: "wait", title: "No track record yet", text: "Results will show here once the backtest has run."};
+  const proven = [];
+  for (const mk of ["spread", "total", "ml"]) {
+    const c = combine(s.buckets[mk]);
+    if (c && c.n >= 150 && c.roi - 2 * c.se > 0) proven.push(MK[mk].toLowerCase() + "s");
+  }
+  if (proven.length) return {cls: "good", title: "Showing a real edge on " + proven.join(" and "),
+    text: "Flagged bets on those have made money by more than luck would explain. Still keep bets small: edges shrink over time."};
+  const m = s.model_margin_mae_same_games, l = s.line_margin_mae;
+  return {cls: "", title: "No proven edge yet",
+    text: (m && l ? `DraftKings' lines have been more accurate than the model (off by ${n1(l)} points per game vs ${n1(m)}). ` : "") +
+      "Treat these picks as leans, not locks, and keep bets small."};
+}
+function trustBlock(link) {
+  const t = trust();
+  return `<section class="trust ${t.cls}"><h3>${t.title}</h3><p>${t.text}</p>${link ? '<button type="button" data-go="check">See the evidence</button>' : ""}</section>`;
+}
+
+/* ---------- views ---------- */
+function tonight() {
+  const F = flagged();
+  let h = trustBlock(true);
+  h += `<h2>Best bets</h2><p class="lede">Games where our number and DraftKings' line disagree enough to be worth a look. Biggest edge first.</p>`;
+  if (!F.length) h += `<div class="empty"><b>No bets clear the bar right now.</b>That's normal. Picks show up when DraftKings posts lines that differ from our numbers by enough. Check back closer to tip-off.</div>`;
+  for (const {g, mk, b} of F) {
+    const t = tier(b.ev), thin = Math.min(g.home_games, g.away_games) < 5;
+    h += `<article class="ticket ${t.cls}">
+      <div class="head"><strong>${MK[mk]}</strong><span>${day(g.date)} ${tm(g.date)}</span></div>
+      <div class="perf" aria-hidden="true"></div>
+      <div class="main">
+        <div><div class="pick">${pickText(g, mk, b)}<small>${am(b.odds)}</small></div>
+          <p class="matchup">${esc(g.away)} ${g.neutral ? "vs" : "at"} ${esc(g.home)}</p></div>
+        <div class="edge"><b>${spct(b.ev)}</b><span>${t.label}</span></div>
+        <p class="why">${whyText(g, mk, b)}</p>
+        ${thin ? '<p class="note-thin">One team has played fewer than 5 games, so its rating still leans on last season.</p>' : ""}
+      </div></article>`;
+  }
+  h += `<h2>All games</h2><p class="lede">Next 40 hours. Tap a game for our prediction. A dot means there's a flagged bet.</p>`;
+  if (!D.slate.length) h += `<div class="empty"><b>No games on the board.</b>Games appear here once ESPN lists them.</div>`;
+  else {
+    h += `<div class="games">`;
+    D.slate.forEach((g, i) => {
+      const top = Object.values(g.bets || {}).filter(b => b.ev >= D.params.min_ev).sort((a, b) => b.ev - a.ev)[0];
+      const dot = top ? `<span class="dot ${top.ev >= .07 ? "" : "small"}" aria-label="flagged bet"></span>` : "";
+      const line = g.spread != null ? esc(g.home_abbr || g.home.split(" ")[0]) + " " + sgn(g.spread) : "No line";
+      const hp = (g.blend_total + g.blend_margin) / 2, ap = (g.blend_total - g.blend_margin) / 2;
+      let rows = "";
+      for (const mk of ["spread", "total", "ml"]) {
+        const b = g.bets && g.bets[mk]; if (!b) continue;
+        rows += `<tr><td>${MK[mk]}: ${pickText(g, mk, b)} ${am(b.odds)}</td><td class="${b.ev >= D.params.min_ev ? "pos" : "neg"}">${spct(b.ev)}</td></tr>`;
+      }
+      h += `<div class="game" id="g${i}"><button type="button" aria-expanded="false" data-g="${i}">
+          <span class="time">${tm(g.date)}</span>
+          <span class="teams"><span>${esc(g.away)}</span><span>${g.neutral ? "vs" : "at"} ${esc(g.home)}</span></span>
+          <span class="line">${dot}${line}</span></button>
+        <div class="detail">
+          <p class="score">${g.spread != null ? "We predict" : "Ratings predict"} ${esc(g.away)} ${Math.round(g.spread != null ? ap : g.pred_away)}, ${esc(g.home)} ${Math.round(g.spread != null ? hp : g.pred_home)}.${g.neutral ? " Neutral court." : ""}</p>
+          ${rows ? `<table class="mkts"><tr><td class="neg">Best side in each market</td><td class="neg">Edge</td></tr>${rows}</table>` : "<p>No DraftKings line yet.</p>"}
+        </div></div>`;
+    });
+    h += `</div>`;
+  }
+  h += `<details class="gloss"><summary>What do these words mean?</summary><dl>
+    <dt>Spread</dt><dd>Points added to or taken from a team's score. "Duke −4.5" means Duke has to win by 5 or more for the bet to win.</dd>
+    <dt>Total</dt><dd>A bet on whether both teams' points combined go over or under the line.</dd>
+    <dt>Moneyline</dt><dd>A bet on who wins outright. +150 pays $150 on a $100 bet; −150 means you bet $150 to win $100.</dd>
+    <dt>Edge</dt><dd>How much we expect to win per dollar bet, using our numbers instead of DraftKings'. +4% means about 4 cents per dollar over the long run, if our numbers are right.</dd>
+    <dt>Units</dt><dd>Profit counted in bet sizes. If you bet $10 a game, +3 units is +$30.</dd>
+    <dt>Closing line value</dt><dd>Whether the line moved toward our pick before tip-off. Beating the closing line regularly is the best early sign that an edge is real.</dd>
+  </dl></details>`;
+  $("#m").innerHTML = h;
+  document.querySelectorAll(".game>button").forEach(b => b.onclick = () => {
+    const el = b.parentElement, open = !el.classList.contains("open");
+    el.classList.toggle("open", open); b.setAttribute("aria-expanded", open);
+  });
+}
+
+function results() {
+  const R = D.record; let any = false, h = "";
+  h += `<h2>My results</h2><p class="lede">Every flagged bet, graded at the price when the model first flagged it.</p>`;
+  for (const mk of ["spread", "total", "ml"]) {
+    const o = R[mk]; if (!o || !o.n) continue; any = true;
+    h += `<section class="panel"><div class="row"><h3>${MK[mk]}s</h3><span class="sub">${o.n} bets</span></div>
+      <div class="row"><div class="big ${o.units >= 0 ? "pos" : ""}">${o.units >= 0 ? "+" : "−"}${Math.abs(o.units).toFixed(1)} units</div>
+      <div class="big">${o.w}–${o.l}${o.push ? "–" + o.push : ""}</div></div>
+      <p class="sub">${spct(o.roi)} return per bet.${o.clv_n ? ` The line moved our way on ${Math.round(100 * o.clv_pos / o.clv_n)}% of bets (average ${mk === "ml" ? sgn(o.avg_clv) + " pts of win chance" : sgn(o.avg_clv) + " points"}).` : ""}</p></section>`;
+  }
+  if (!any) h += `<div class="empty"><b>No graded bets yet.</b>Bets are graded after games finish. After a few days you'll see wins, losses and units here.</div>`;
+  h += `<p class="fine">Win–loss records swing a lot over a few hundred bets. Whether the line moves your way (closing line value) settles much sooner, so watch that number first.</p>`;
+  $("#m").innerHTML = h;
+}
+
+function checkView() {
+  const B = D.backtest || {};
+  let h = trustBlock(false);
+  h += `<h2>Model check</h2><p class="lede">We replay every past game using only what was known the day before, then compare against DraftKings' closing line and the final score.</p>`;
+  h += `<div class="seg" role="group" aria-label="Season">
+    <button type="button" data-s="this_season" aria-pressed="${season === "this_season"}">This season</button>
+    <button type="button" data-s="last_season" aria-pressed="${season === "last_season"}">Last season</button></div>`;
+  const s = B[season];
+  if (!s || !s.games) h += `<div class="empty"><b>Nothing to show for this season yet.</b>Results appear after the next weekly re-check.</div>`;
+  else {
+    const rows = [["spread", "margin", "line_margin_mae", "Spreads", "points of margin"], ["total", "total", "line_total_mae", "Totals", "total points"]];
+    for (const [mk, key, lineKey, title, unit] of rows) {
+      const ours = s[`model_${key}_mae_same_games`], dk = s[lineKey];
+      const c = combine(s.buckets && s.buckets[mk]);
+      h += `<section class="panel"><h3>${title}</h3>`;
+      if (ours != null && dk != null) {
+        const mx = Math.max(ours, dk) * 1.1;
+        h += `<p class="sub">Average miss on the final score (${unit}). Shorter is better.</p><div class="bars">
+          <div class="bar"><span>Our model</span><i><b style="width:${100 * ours / mx}%"></b></i><span>${ours.toFixed(2)}</span></div>
+          <div class="bar mkt"><span>DraftKings</span><i><b style="width:${100 * dk / mx}%"></b></i><span>${dk.toFixed(2)}</span></div></div>`;
+      }
+      h += c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} per bet. Given the sample, the true figure is likely between ${spct(c.roi - 2 * c.se, 0)} and ${spct(c.roi + 2 * c.se, 0)}.</p>`
+             : `<p class="sub">No flagged bets in this period.</p>`;
+      h += details(s, mk) + `</section>`;
+    }
+    const c = combine(s.buckets && s.buckets.ml);
+    h += `<section class="panel"><h3>Moneylines</h3>${c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} per bet (likely range ${spct(c.roi - 2 * c.se, 0)} to ${spct(c.roi + 2 * c.se, 0)}).</p>` : `<p class="sub">No flagged bets in this period.</p>`}${details(s, "ml")}</section>`;
+  }
+  const p = D.params;
+  h += `<p class="fine">How the forecast is built: ${Math.round(100 * (1 - p.mix_margin))}% points model and ${Math.round(100 * p.mix_margin)}% efficiency model, then blended ${Math.round(100 * p.w_margin)}% with ${Math.round(100 * (1 - p.w_margin))}% DraftKings for margins (totals ${Math.round(100 * p.w_total)}/${Math.round(100 * (1 - p.w_total))}). All weights are fit on last season. Home court is worth ${n1(D.hca)} points.</p>`;
+  $("#m").innerHTML = h;
+  document.querySelectorAll(".seg button").forEach(b => b.onclick = () => { season = b.dataset.s; checkView(); });
+}
+function details(s, mk) {
+  const b = s.buckets && s.buckets[mk]; if (!b) return "";
+  let t = `<table class="data"><tr><th>Our edge</th><th>Bets</th><th>Won</th><th>Return</th><th>± error</th></tr>`;
+  for (const r of b) t += r.n ? `<tr><td>${r.ev}</td><td>${r.n}</td><td>${pct(r.win_pct, 0)}</td><td class="${r.roi - 2 * (r.roi_se || 9) > 0 ? "pos" : ""}">${spct(r.roi)}</td><td>${r.roi_se == null ? "–" : pct(r.roi_se)}</td></tr>` : "";
+  t += `</table>`;
+  const sg = s.segments && s.segments[mk];
+  if (sg) {
+    t += `<table class="data"><tr><th>Flagged bets by type</th><th>Bets</th><th>Return</th><th>± error</th></tr>`;
+    const order = {month: ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr"], size: ["0-4.5", "5-9.5", "10-15.5", "16+"]};
+    for (const k of ["month", "conf", "size"]) {
+      const list = (sg[k] || []).slice().sort((a, b) => order[k] ? order[k].indexOf(a.group) - order[k].indexOf(b.group) : a.group < b.group ? -1 : 1);
+      for (const r of list) t += `<tr><td>${k === "size" ? "Spread " + r.group : r.group}</td><td>${r.n}</td><td class="${r.roi - 2 * (r.roi_se || 9) > 0 ? "pos" : ""}">${spct(r.roi)}</td><td>${r.roi_se == null ? "–" : pct(r.roi_se)}</td></tr>`;
+    }
+    t += `</table><p class="fine">Green means the return beats twice its error. With this many rows, a couple will turn green by luck, so trust a row only if it stays green next season too.</p>`;
+  }
+  return `<details class="more"><summary>Full breakdown</summary>${t}</details>`;
+}
+
+function teams() {
+  const E = D.ratings.length && D.ratings[0].adj_o != null;
+  const list = (E ? [...D.ratings].sort((a, b) => b.adj_em - a.adj_em) : D.ratings).map((r, i) => ({...r, rank: i + 1}));
+  let h = `<h2>Team ratings</h2><p class="lede">${E ? "Points per 100 possessions against an average Division I team. Offense: points scored. Defense: points allowed (lower is better). Pace: possessions per game." : "Points per game above or below an average Division I team."}</p>
+    <input class="search" id="q" type="search" placeholder="Find a team" value="${esc(teamQ)}" aria-label="Find a team">
+    <div class="tbl-wrap"><table class="data" id="tt"></table></div>`;
+  $("#m").innerHTML = h;
+  const draw = () => {
+    const q = teamQ.trim().toLowerCase();
+    const rows = list.filter(r => !q || r.team.toLowerCase().includes(q)).slice(0, q ? 400 : 150);
+    $("#tt").innerHTML = `<tr><th>#</th><th style="text-align:left">Team</th>${E ? "<th>Net</th><th>Off</th><th>Def</th><th>Pace</th>" : "<th>Net</th><th>Off</th><th>Def</th>"}</tr>` +
+      rows.map(r => `<tr><td>${r.rank}</td><td style="text-align:left">${esc(r.team)}</td>${E ? `<td>${sgn(r.adj_em)}</td><td>${(+r.adj_o).toFixed(1)}</td><td>${(+r.adj_d).toFixed(1)}</td><td>${(+r.tempo).toFixed(1)}</td>` : `<td>${sgn(r.net)}</td><td>${sgn(r.off)}</td><td>${sgn(r.def)}</td>`}</tr>`).join("") +
+      (rows.length ? "" : `<tr><td colspan="6">No team matches "${esc(teamQ)}".</td></tr>`);
+  };
+  draw();
+  $("#q").oninput = e => { teamQ = e.target.value; draw(); };
+}
+
+const V = {tonight, results, check: checkView, teams};
+function render() {
+  if (!V[view]) view = "tonight";
+  $("#stamp").textContent = "Updated " + D.updated;
+  document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-current", b.dataset.v === view ? "page" : "false"));
+  V[view]();
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+  $("#foot").innerHTML = `App version ${APP.split("-")[0]} (build ${APP.split("-")[1] || "dev"}). Lines from DraftKings via ESPN. For entertainment; bet responsibly.<br>
+    To open this like an app: in Safari tap Share, then Add to Home Screen.`;
+}
+function go(v) { view = v; history.replaceState(null, "", "#" + v); render(); window.scrollTo(0, 0); }
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => go(b.dataset.v));
+load().catch(e => { $("#m").innerHTML = `<div class="empty"><b>Couldn't load the picks.</b>Check your connection, then pull down to refresh. (${esc(e.message)})</div>`; });
+</script>
+</body>
+</html>

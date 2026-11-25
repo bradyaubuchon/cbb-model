@@ -206,6 +206,8 @@ def price_game(margin, total, g, p):
         side = [("home", ph, mh), ("away", 1 - ph, ma)]
         best = max(side, key=lambda s: ev(s[1], 0, s[2]))
         ih, ia = implied(mh), implied(ma)
+        if best[2] > 400:  # normal-curve tails are unreliable for big underdogs; don't price them
+            return out
         mkt = ih / (ih + ia) if best[0] == "home" else ia / (ih + ia)
         out["ml"] = {"side": best[0], "p": best[1], "odds": best[2], "ev": ev(best[1], 0, best[2]),
                      "market_p": mkt}
