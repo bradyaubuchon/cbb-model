@@ -281,7 +281,6 @@ def main():
     only = sys.argv[2].split(",") if len(sys.argv) > 2 else None
     if cmd == "diag":
         from . import diag
-        store.set_sport((only or ["ncaam"])[0])
         diag.main()
     elif cmd in ("update", "tune", "backtest"):
         run_all(cmd, only)
