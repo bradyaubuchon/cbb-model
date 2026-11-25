@@ -1,1 +1,1 @@
-{"app": "2.0-9e18fd1", "data": "db256e951e", "updated": "Wed Nov 25, 6:29 AM ET"}
+{"app": "3.0-7a1b468", "data": "707d7c90a6", "updated": "Wed Nov 25, 10:33 AM ET", "sports": {"ncaam": {"v": "b9303287f1", "updated": "Wed Nov 25, 10:07 AM ET", "iso": "2026-11-25T10:07:22.766469-05:00"}, "nba": {"v": "7e64f351f2", "updated": "Wed Nov 25, 10:07 AM ET", "iso": "2026-11-25T10:07:26.010224-05:00"}, "nfl": {"v": "fd9eae355e", "updated": "Wed Nov 25, 10:33 AM ET", "iso": "2026-11-25T10:33:41.854023-05:00"}}}

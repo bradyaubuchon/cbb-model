@@ -1,0 +1,312 @@
+{
+ "half_life": 120,
+ "lam": 5,
+ "prev_w": 0.35,
+ "pool_min": 6,
+ "margin_sd": 11.0,
+ "total_sd": 17.5,
+ "min_ev": 0.03,
+ "ml_flag": false,
+ "w_margin": 0.3,
+ "w_total": 0.3,
+ "e_half_life": 60.0,
+ "e_lam": 8.0,
+ "e_prev_w": 0.35,
+ "t_lam": 5.0,
+ "mix_margin": 0.0,
+ "mix_total": 0.0,
+ "blend_fit": false,
+ "box_games_at_tune": 0,
+ "box_complete": true,
+ "mix_fit": {},
+ "tune_log": [
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 2,
+   "prev_w": 0.15,
+   "mae_margin": 10.357173766265298,
+   "mae_total": 11.17446221439027
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 2,
+   "prev_w": 0.35,
+   "mae_margin": 10.270943409023918,
+   "mae_total": 11.00546838603813
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 2,
+   "prev_w": 0.7,
+   "mae_margin": 10.291690342488723,
+   "mae_total": 10.880678319728275
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 5,
+   "prev_w": 0.15,
+   "mae_margin": 10.347780312360381,
+   "mae_total": 11.104942636390396
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 5,
+   "prev_w": 0.35,
+   "mae_margin": 10.307652200745306,
+   "mae_total": 10.984037693737545
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 5,
+   "prev_w": 0.7,
+   "mae_margin": 10.278845331249086,
+   "mae_total": 10.88194378834752
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 12,
+   "prev_w": 0.15,
+   "mae_margin": 10.527958034052642,
+   "mae_total": 11.189774229576347
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 12,
+   "prev_w": 0.35,
+   "mae_margin": 10.490338658631995,
+   "mae_total": 11.101692372796995
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 12,
+   "prev_w": 0.7,
+   "mae_margin": 10.45720707962298,
+   "mae_total": 11.025514305886762
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 30,
+   "prev_w": 0.15,
+   "mae_margin": 10.801873982888,
+   "mae_total": 11.315070525919944
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 30,
+   "prev_w": 0.35,
+   "mae_margin": 10.770348181507735,
+   "mae_total": 11.248951256208024
+  },
+  {
+   "model": "pts",
+   "half_life": 30,
+   "lam": 30,
+   "prev_w": 0.7,
+   "mae_margin": 10.732055379394772,
+   "mae_total": 11.197417565786688
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 2,
+   "prev_w": 0.15,
+   "mae_margin": 10.292052019908086,
+   "mae_total": 10.976041996806792
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 2,
+   "prev_w": 0.35,
+   "mae_margin": 10.276027737484881,
+   "mae_total": 10.800331785036311
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 2,
+   "prev_w": 0.7,
+   "mae_margin": 10.402946942137943,
+   "mae_total": 10.694063591892744
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 5,
+   "prev_w": 0.15,
+   "mae_margin": 10.283118483370822,
+   "mae_total": 10.953746545821932
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 5,
+   "prev_w": 0.35,
+   "mae_margin": 10.2561945816893,
+   "mae_total": 10.820257505271659
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 5,
+   "prev_w": 0.7,
+   "mae_margin": 10.31673917881531,
+   "mae_total": 10.727258544216648
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 12,
+   "prev_w": 0.15,
+   "mae_margin": 10.422725200972367,
+   "mae_total": 11.023758346982602
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 12,
+   "prev_w": 0.35,
+   "mae_margin": 10.390737455092456,
+   "mae_total": 10.92667734017596
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 12,
+   "prev_w": 0.7,
+   "mae_margin": 10.383122269927041,
+   "mae_total": 10.849706223949127
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 30,
+   "prev_w": 0.15,
+   "mae_margin": 10.679466726136404,
+   "mae_total": 11.16384568825816
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 30,
+   "prev_w": 0.35,
+   "mae_margin": 10.633759633123995,
+   "mae_total": 11.091114033761425
+  },
+  {
+   "model": "pts",
+   "half_life": 60,
+   "lam": 30,
+   "prev_w": 0.7,
+   "mae_margin": 10.585687800026818,
+   "mae_total": 11.024791948969842
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 2,
+   "prev_w": 0.15,
+   "mae_margin": 10.288384846619284,
+   "mae_total": 10.887662859704596
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 2,
+   "prev_w": 0.35,
+   "mae_margin": 10.327347180701802,
+   "mae_total": 10.729022512921754
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 2,
+   "prev_w": 0.7,
+   "mae_margin": 10.503968892355495,
+   "mae_total": 10.631394284853881
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 5,
+   "prev_w": 0.15,
+   "mae_margin": 10.267049321515834,
+   "mae_total": 10.887446597250975
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 5,
+   "prev_w": 0.35,
+   "mae_margin": 10.271016708287451,
+   "mae_total": 10.762667942388683
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 5,
+   "prev_w": 0.7,
+   "mae_margin": 10.400267307390225,
+   "mae_total": 10.67442304678345
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 12,
+   "prev_w": 0.15,
+   "mae_margin": 10.37774892471879,
+   "mae_total": 10.942096256818116
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 12,
+   "prev_w": 0.35,
+   "mae_margin": 10.358823695956543,
+   "mae_total": 10.853047228554884
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 12,
+   "prev_w": 0.7,
+   "mae_margin": 10.389306896173558,
+   "mae_total": 10.783866598552128
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 30,
+   "prev_w": 0.15,
+   "mae_margin": 10.613896681891655,
+   "mae_total": 11.08658577388491
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 30,
+   "prev_w": 0.35,
+   "mae_margin": 10.559921916568477,
+   "mae_total": 11.013765492675441
+  },
+  {
+   "model": "pts",
+   "half_life": 120,
+   "lam": 30,
+   "prev_w": 0.7,
+   "mae_margin": 10.532793448322144,
+   "mae_total": 10.93973886322215
+  }
+ ]
+}
