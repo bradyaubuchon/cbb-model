@@ -165,7 +165,7 @@ def record(picks, p):
         hs, as_ = rec["final"]
         for mk in out:
             b = rec["first"]["bets"].get(mk)
-            if not b or b["ev"] < p.min_ev:
+            if not b or b["ev"] < p.min_ev or (mk == "ml" and not p.ml_flag):
                 continue
             o = out[mk]
             prof = model.grade(b, mk, hs, as_)

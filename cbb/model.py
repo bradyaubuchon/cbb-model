@@ -30,6 +30,7 @@ class Params:
     margin_sd: float = 11.0      # sd of (actual margin - model margin); set by tuning
     total_sd: float = 17.5       # sd of (actual total - model total); set by tuning
     min_ev: float = 0.03         # EV per unit needed to flag a play
+    ml_flag: bool = False        # backtest: flagged moneylines lost ~7%/bet, so they're shown but not flagged
     w_margin: float = 0.3        # weight on the model vs the market line for the margin (tuned)
     w_total: float = 0.3         # same for the total (tuned)
     # efficiency + pace model (per-100-possession ratings, KenPom-style)

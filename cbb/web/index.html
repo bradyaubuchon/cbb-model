@@ -229,7 +229,8 @@ function whyText(g, mk, b) {
 }
 function flagged() {
   const out = [];
-  for (const g of D.slate) for (const mk of ["spread", "total", "ml"]) {
+  const mks = D.params.ml_flag ? ["spread", "total", "ml"] : ["spread", "total"];
+  for (const g of D.slate) for (const mk of mks) {
     const b = g.bets && g.bets[mk];
     if (b && b.ev >= D.params.min_ev) out.push({g, mk, b});
   }
@@ -289,14 +290,14 @@ function tonight() {
   else {
     h += `<div class="games">`;
     D.slate.forEach((g, i) => {
-      const top = Object.values(g.bets || {}).filter(b => b.ev >= D.params.min_ev).sort((a, b) => b.ev - a.ev)[0];
+      const top = Object.entries(g.bets || {}).filter(([k, b]) => b.ev >= D.params.min_ev && (k !== "ml" || D.params.ml_flag)).map(e => e[1]).sort((a, b) => b.ev - a.ev)[0];
       const dot = top ? `<span class="dot ${top.ev >= .07 ? "" : "small"}" aria-label="flagged bet"></span>` : "";
       const line = g.spread != null ? esc(g.home_abbr || g.home.split(" ")[0]) + " " + sgn(g.spread) : "No line";
       const hp = (g.blend_total + g.blend_margin) / 2, ap = (g.blend_total - g.blend_margin) / 2;
       let rows = "";
       for (const mk of ["spread", "total", "ml"]) {
         const b = g.bets && g.bets[mk]; if (!b) continue;
-        rows += `<tr><td>${MK[mk]}: ${pickText(g, mk, b)} ${am(b.odds)}</td><td class="${b.ev >= D.params.min_ev ? "pos" : "neg"}">${spct(b.ev)}</td></tr>`;
+        rows += `<tr><td>${MK[mk]}: ${pickText(g, mk, b)} ${am(b.odds)}</td><td class="${b.ev >= D.params.min_ev && (mk !== "ml" || D.params.ml_flag) ? "pos" : "neg"}">${spct(b.ev)}</td></tr>`;
       }
       h += `<div class="game" id="g${i}"><button type="button" aria-expanded="false" data-g="${i}">
           <span class="time">${tm(g.date)}</span>
@@ -365,7 +366,7 @@ function checkView() {
       h += details(s, mk) + `</section>`;
     }
     const c = combine(s.buckets && s.buckets.ml);
-    h += `<section class="panel"><h3>Moneylines</h3>${c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} per bet (likely range ${spct(c.roi - 2 * c.se, 0)} to ${spct(c.roi + 2 * c.se, 0)}).</p>` : `<p class="sub">No flagged bets in this period.</p>`}${details(s, "ml")}</section>`;
+    h += `<section class="panel"><h3>Moneylines</h3>${D.params.ml_flag ? "" : `<p class="sub">Moneyline bets are no longer flagged: in testing they lost money, so treat moneyline edges as unreliable.</p>`}${c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} per bet (likely range ${spct(c.roi - 2 * c.se, 0)} to ${spct(c.roi + 2 * c.se, 0)}).</p>` : `<p class="sub">No flagged bets in this period.</p>`}${details(s, "ml")}</section>`;
   }
   const p = D.params;
   h += `<p class="fine">How the forecast is built: ${Math.round(100 * (1 - p.mix_margin))}% points model and ${Math.round(100 * p.mix_margin)}% efficiency model, then blended ${Math.round(100 * p.w_margin)}% with ${Math.round(100 * (1 - p.w_margin))}% DraftKings for margins (totals ${Math.round(100 * p.w_total)}/${Math.round(100 * (1 - p.w_total))}). All weights are fit on last season. Home court is worth ${n1(D.hca)} points.</p>`;
