@@ -78,14 +78,24 @@ def fetch(sport_key):
 # ---------- matching ESPN games to Odds API events ----------
 
 def _tokens(name):
-    s = re.sub(r"[^a-z0-9 ]", " ", str(name or "").lower().replace("&", " and "))
-    s = s.replace(" st ", " state ").replace("saint ", "st ")
-    return set(s.split())
+    s = re.sub(r"[^a-z0-9 ]", " ", str(name or "").lower().replace("&", " and ").replace("'", ""))
+    s = f" {s} ".replace(" st ", " state ").replace(" saint ", " st ").replace(" univ ", " ")
+    return [t for t in s.split() if t]
+
+
+def _same(a, b):
+    """Token match allowing abbreviations: 'app' ~ 'appalachian', 'intl' ~ 'international'."""
+    return a == b or (min(len(a), len(b)) >= 3 and (a.startswith(b) or b.startswith(a)))
 
 
 def _sim(a, b):
+    """Name similarity in [0, 1]; 0 unless the nicknames (last word) agree, so 'Los Angeles Rams'
+    never matches 'Los Angeles Chargers'."""
     ta, tb = _tokens(a), _tokens(b)
-    return len(ta & tb) / max(1, len(ta | tb))
+    if not ta or not tb or not _same(ta[-1], tb[-1]):
+        return 0.0
+    hits = sum(1 for x in ta if any(_same(x, y) for y in tb))
+    return hits / max(len(ta), len(tb))
 
 
 def match(slate, events):
@@ -99,7 +109,7 @@ def match(slate, events):
                 continue
             sc = min(_sim(g.get("home_full") or g["home"], e["home_team"]),
                      _sim(g.get("away_full") or g["away"], e["away_team"]))
-            if sc >= 0.6:
+            if sc >= 0.5:
                 cands.append((sc, g["id"], e["id"], e))
     out, used = {}, set()
     for sc, gid, eid, e in sorted(cands, key=lambda c: -c[0]):
@@ -112,8 +122,18 @@ def match(slate, events):
 # ---------- fair prices ----------
 
 def _devig(a, b):
+    """Fair chance of side a. 'Power' method: books load most of the vig onto the underdog, so
+    removing it proportionally would overrate longshots."""
     ia, ib = model.implied(a), model.implied(b)
-    return ia / (ia + ib)
+    lo, hi = 1.0, 3.0
+    for _ in range(50):
+        k = (lo + hi) / 2
+        if ia ** k + ib ** k > 1:
+            lo = k
+        else:
+            hi = k
+    k = (lo + hi) / 2
+    return ia ** k / (ia ** k + ib ** k)
 
 
 def _solve(prob_fn, target, lo=-80.0, hi=200.0):
@@ -192,7 +212,7 @@ def edges(event, fv, p):
                     w, push = model.prob_over(fv["total"], p.total_sd, pt)
                     pw = w if side == "over" else 1 - w - push
                     mk, line = "total", pt
-                elif m["key"] == "h2h" and fv["home_p"] is not None and o["name"] in (home, away):
+                elif m["key"] == "h2h" and fv["home_p"] is not None and o["name"] in (home, away) and price <= 400:
                     side = "home" if o["name"] == home else "away"
                     pw, push = (fv["home_p"] if side == "home" else 1 - fv["home_p"]), 0.0
                     mk, line = "ml", None
