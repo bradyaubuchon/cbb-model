@@ -3,11 +3,12 @@
  "lam": 2,
  "prev_w": 0.35,
  "pool_min": 6,
- "margin_sd": 13.25,
- "total_sd": 17.63,
+ "margin_sd": 11.22,
+ "total_sd": 16.94,
  "min_ev": 0.03,
- "w_margin": 0.3,
- "w_total": 0.3,
+ "w_margin": 0.05,
+ "w_total": 0.15,
+ "blend_fit": true,
  "tune_log": [
   {
    "half_life": 30,
