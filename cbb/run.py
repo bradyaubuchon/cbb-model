@@ -171,7 +171,7 @@ def update_picks(games, ratings, pool, p, now_utc):
 def record(picks, p):
     """Live results of flagged plays. 'first' = the price when the model first saw the game
     (what you could have bet); CLV compares it to the last line before tip."""
-    out = {mk: {"n": 0, "w": 0, "l": 0, "push": 0, "units": 0.0, "clv_sum": 0.0, "clv_n": 0, "clv_pos": 0}
+    out = {mk: {"n": 0, "w": 0, "l": 0, "push": 0, "units": 0.0, "risked": 0.0, "clv_sum": 0.0, "clv_n": 0, "clv_pos": 0}
            for mk in ("spread", "total", "ml")}
     for rec in picks.values():
         if "final" not in rec:
@@ -185,6 +185,7 @@ def record(picks, p):
             prof = model.grade(b, mk, hs, as_)
             o["n"] += 1
             o["units"] += prof
+            o["risked"] += model.stake(b["odds"])
             o["w" if prof > 0 else "l" if prof < 0 else "push"] += 1
             last = rec.get("last", rec["first"])
             clv = None
@@ -202,7 +203,7 @@ def record(picks, p):
                 o["clv_n"] += 1
                 o["clv_pos"] += clv > 0
     for o in out.values():
-        o["roi"] = o["units"] / o["n"] if o["n"] else None
+        o["roi"] = o["units"] / o["risked"] if o["risked"] else None
         o["avg_clv"] = o["clv_sum"] / o["clv_n"] if o["clv_n"] else None
     return out
 

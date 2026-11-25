@@ -215,8 +215,13 @@ def price_game(margin, total, g, p):
     return out
 
 
+def stake(american):
+    """Units risked. Favorites (minus odds) are bet to WIN 1 unit; underdogs (plus odds) RISK 1 unit."""
+    return -american / 100 if american < 0 else 1.0
+
+
 def grade(bet, market, hs, as_):
-    """Profit in units (risking 1) for a priced bet given the final score, or None for a push."""
+    """Profit in units for a priced bet given the final score (0 for a push), using stake()."""
     margin, tot = hs - as_, hs + as_
     if market == "spread":
         m = margin if bet["side"] == "home" else -margin
@@ -227,7 +232,8 @@ def grade(bet, market, hs, as_):
         res = margin if bet["side"] == "home" else -margin
     if res == 0:
         return 0.0
-    return payout(bet["odds"]) if res > 0 else -1.0
+    risk = stake(bet["odds"])
+    return risk * payout(bet["odds"]) if res > 0 else -risk
 
 
 # ---------- efficiency + pace model ----------

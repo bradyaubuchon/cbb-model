@@ -13,7 +13,7 @@ from . import store
 
 DOCS = store.ROOT / "docs"
 WEB = store.ROOT / "cbb" / "web"
-APP_RELEASE = "3.0"  # bump for notable app changes; the build hash changes automatically
+APP_RELEASE = "3.1"  # bump for notable app changes; the build hash changes automatically
 
 
 def _clean(x):

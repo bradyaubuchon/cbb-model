@@ -66,16 +66,18 @@ def _bucket_table(rows):
             tab.append({"ev": f"{lo:.0%}+" if hi > 1 else f"{lo:.0%}-{hi:.0%}", "n": 0})
             continue
         prof = [r["profit"] for r in b]
+        risk = [r["risk"] for r in b]
         wins = sum(1 for x in prof if x > 0)
         losses = sum(1 for x in prof if x < 0)
         tab.append({
             "ev": f"{lo:.0%}+" if hi > 1 else f"{lo:.0%}-{hi:.0%}",
             "n": len(b), "w": wins, "l": losses, "p": len(b) - wins - losses,
             "win_pct": wins / max(1, wins + losses),
-            "roi": sum(prof) / len(b),
+            "roi": sum(prof) / sum(risk),          # return on units risked
             "units": sum(prof),
+            "risked": sum(risk),
             # one standard error of ROI, so a 'profitable' bucket can be judged against noise
-            "roi_se": float(np.std(prof) / math.sqrt(len(b))) if len(b) > 1 else None,
+            "roi_se": float(np.std(prof) / math.sqrt(len(b)) / np.mean(risk)) if len(b) > 1 else None,
         })
     return tab
 
@@ -115,7 +117,7 @@ def evaluate(pred, p):
         size = None if sz is None else "0-4.5" if sz <= 4.5 else "5-9.5" if sz <= 9.5 else "10-15.5" if sz <= 15.5 else "16+"
         for mk, b in priced.items():
             prof = model.grade(b, mk, g["home_score"], g["away_score"])
-            bets[mk].append({"ev": b["ev"], "profit": prof, "month": month, "size": size,
+            bets[mk].append({"ev": b["ev"], "profit": prof, "risk": model.stake(b["odds"]), "month": month, "size": size,
                              "conf": "Conference" if g.get("conf_game") == 1 else "Non-conf"})
     res["buckets"] = {mk: _bucket_table(rows) for mk, rows in bets.items()}
     # flagged plays split by game type, to look for pockets where the edge is real.
@@ -128,9 +130,11 @@ def evaluate(pred, p):
             groups = {}
             for r in plays:
                 if r[key] is not None:
-                    groups.setdefault(r[key], []).append(r["profit"])
-            seg[mk][key] = [{"group": k, "n": len(v), "roi": sum(v) / len(v),
-                             "roi_se": float(np.std(v) / math.sqrt(len(v))) if len(v) > 1 else None}
+                    groups.setdefault(r[key], []).append((r["profit"], r["risk"]))
+            seg[mk][key] = [{"group": k, "n": len(v), "units": sum(x for x, _ in v),
+                             "roi": sum(x for x, _ in v) / sum(y for _, y in v),
+                             "roi_se": float(np.std([x for x, _ in v]) / math.sqrt(len(v)) / np.mean([y for _, y in v]))
+                             if len(v) > 1 else None}
                             for k, v in groups.items()]
     res["segments"] = seg
     return res
