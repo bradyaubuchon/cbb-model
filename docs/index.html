@@ -162,7 +162,7 @@ footer{max-width:640px;margin:20px auto 0;padding:0 20px;color:var(--muted);font
 </div></nav>
 
 <script>
-const APP = "3.1-5f56ef4";
+const APP = "4.0-33c0d31";
 const SPORTS = [["ncaam", "College"], ["nba", "NBA"], ["nfl", "NFL"]];
 let sport = (() => { try { return localStorage.getItem("sport") || "ncaam"; } catch (e) { return "ncaam"; } })();
 let VER = null;
@@ -244,6 +244,38 @@ function stakeText(odds) {
   const u = x => x.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1") + "U";
   return odds < 0 ? `Risk ${u(-odds / 100)} to win 1U` : `Risk 1U to win ${u(odds / 100)}`;
 }
+function fairOdds(p) { return p >= 0.5 ? -100 * p / (1 - p) : 100 * (1 - p) / p; }
+function priceWhy(g, mk, b) {
+  const F = g.market.fair, src = F.source === "Pinnacle" ? "Pinnacle (the sharpest book)" : "the " + F.source;
+  if (mk === "spread") {
+    const t = esc(teamOf(g, b.side)), fl = b.side === "home" ? -F.margin : F.margin;
+    return `Based on ${src}, the fair spread is ${t} ${sgn(fl)}. ${esc(b.book_title)} is offering ${sgn(b.line)} at ${am(b.odds)}.`;
+  }
+  if (mk === "total") return `Based on ${src}, the fair total is ${n1(F.total)}. ${esc(b.book_title)} has ${n1(b.line)} at ${am(b.odds)}.`;
+  const pw = b.p / (1 - (b.push || 0));
+  return `Based on ${src}, ${esc(teamOf(g, b.side))} wins ${Math.round(pw * 100)}% of the time, a fair price of ${am(fairOdds(pw))}. ${esc(b.book_title)} pays ${am(b.odds)}.`;
+}
+function priceEdges() {
+  const out = [];
+  for (const g of D.slate) if (g.market) for (const [mk, b] of Object.entries(g.market.best || {}))
+    if (b.ev >= D.odds_min_ev) out.push({g, mk, b});
+  return out.sort((a, b) => b.b.ev - a.b.ev);
+}
+function ticket(g, mk, b, label, where, why, big) {
+  const t = b.ev >= big ? {cls: "t-big", label: "Bigger edge"} : {cls: "t-small", label: "Small edge"};
+  const thin = label === "model" && Math.min(g.home_games, g.away_games) < 5;
+  return `<article class="ticket ${t.cls}">
+      <div class="head"><strong>${MK[mk]}${where ? " at " + esc(where) : ""}</strong><span>${day(g.date)} ${tm(g.date)}</span></div>
+      <div class="perf" aria-hidden="true"></div>
+      <div class="main">
+        <div><div class="pick">${pickText(g, mk, b)}<small>${am(b.odds)}</small></div>
+          <p class="matchup">${esc(g.away)} ${g.neutral ? "vs" : "at"} ${esc(g.home)}</p>
+          <p class="stake">${stakeText(b.odds)}</p></div>
+        <div class="edge"><b>${spct(b.ev)}</b><span>${t.label}</span></div>
+        <p class="why">${why}</p>
+        ${thin ? '<p class="note-thin">One team has played fewer than 5 games, so its rating still leans on last season.</p>' : ""}
+      </div></article>`;
+}
 function tier(ev) { return ev >= 0.07 ? {cls: "t-big", label: "Bigger edge"} : {cls: "t-small", label: "Small edge"}; }
 function pickText(g, mk, b) {
   if (mk === "spread") return esc(teamOf(g, b.side)) + " " + sgn(b.line);
@@ -303,23 +335,18 @@ function trustBlock(link) {
 /* ---------- views ---------- */
 function tonight() {
   const F = flagged();
-  let h = trustBlock(true);
-  h += `<h2>Best bets</h2><p class="lede">Games where our number and DraftKings' line disagree enough to be worth a look. Biggest edge first.</p>`;
-  if (!F.length) h += `<div class="empty"><b>No bets clear the bar right now.</b>That's normal. Picks show up when DraftKings posts lines that differ from our numbers by enough. Check back closer to game time.</div>`;
-  for (const {g, mk, b} of F) {
-    const t = tier(b.ev), thin = Math.min(g.home_games, g.away_games) < 5;
-    h += `<article class="ticket ${t.cls}">
-      <div class="head"><strong>${MK[mk]}</strong><span>${day(g.date)} ${tm(g.date)}</span></div>
-      <div class="perf" aria-hidden="true"></div>
-      <div class="main">
-        <div><div class="pick">${pickText(g, mk, b)}<small>${am(b.odds)}</small></div>
-          <p class="matchup">${esc(g.away)} ${g.neutral ? "vs" : "at"} ${esc(g.home)}</p>
-          <p class="stake">${stakeText(b.odds)}</p></div>
-        <div class="edge"><b>${spct(b.ev)}</b><span>${t.label}</span></div>
-        <p class="why">${whyText(g, mk, b)}</p>
-        ${thin ? '<p class="note-thin">One team has played fewer than 5 games, so its rating still leans on last season.</p>' : ""}
-      </div></article>`;
+  const P = priceEdges();
+  let h = `<h2>Best prices</h2>`;
+  if (!D.odds_time) h += `<div class="empty"><b>Sportsbook comparison isn't on yet.</b>It starts once the Odds API key is saved in GitHub and the next update runs.</div>`;
+  else {
+    h += `<p class="lede">Bets where a sportsbook pays more than the fair price set by the sharpest book. This doesn't depend on our model. Prices checked ${day(D.odds_time)} ${tm(D.odds_time)}; they move, so confirm before betting.</p>`;
+    if (!P.length) h += `<div class="empty"><b>No prices beat fair value right now.</b>Mispriced lines are usually small and short-lived. New prices are checked several times a day.</div>`;
+    for (const {g, mk, b} of P) h += ticket(g, mk, b, "price", b.book_title, priceWhy(g, mk, b), 0.05);
   }
+  h += `<h2>Model picks</h2>` + trustBlock(true);
+  h += `<p class="lede">Games where our ratings and DraftKings' line disagree enough to be worth a look.</p>`;
+  if (!F.length) h += `<div class="empty"><b>No model picks right now.</b>That's expected: in testing, our ratings rarely disagree with DraftKings by enough to matter.</div>`;
+  for (const {g, mk, b} of F) h += ticket(g, mk, b, "model", "", whyText(g, mk, b), 0.07);
   h += `<h2>All games</h2><p class="lede">Next ${D.horizon_h >= 100 ? Math.round(D.horizon_h / 24) + " days" : D.horizon_h + " hours"}. Tap a game for our prediction. A dot means there's a flagged bet.</p>`;
   if (!D.slate.length) h += `<div class="empty"><b>No games on the board.</b>Games appear here once ESPN lists them.</div>`;
   else {
@@ -339,8 +366,12 @@ function tonight() {
           <span class="teams"><span>${esc(g.away)}</span><span>${g.neutral ? "vs" : "at"} ${esc(g.home)}</span></span>
           <span class="line">${dot}${line}</span></button>
         <div class="detail">
+          ${(g.injuries || []).length ? `<p class="score"><b>Injury report:</b> ${g.injuries.slice(0, 5).map(r => `${esc(r.player)} (${esc(r.team)}, ${esc(r.status.toLowerCase())})`).join("; ")}.${Math.abs(g.inj_adj || 0) >= 0.1 ? ` That moves our number ${n1(Math.abs(g.inj_adj))} points toward ${esc(g.inj_adj > 0 ? g.home : g.away)}.` : ""}</p>` : ""}
+          ${g.rest_h != null && g.rest_a != null && g.rest_h !== g.rest_a && D.sport !== "nfl" && Math.min(g.rest_h, g.rest_a) <= 1 ? `<p class="score">${esc(g.rest_h < g.rest_a ? g.home : g.away)} is on the second night of a back-to-back.</p>` : ""}
           <p class="score">${g.spread != null ? "We predict" : "Ratings predict"} ${esc(g.away)} ${Math.round(g.spread != null ? ap : g.pred_away)}, ${esc(g.home)} ${Math.round(g.spread != null ? hp : g.pred_home)}.${g.neutral ? " Neutral court." : ""}</p>
-          ${rows ? `<table class="mkts"><tr><td class="neg">Best side in each market</td><td class="neg">Edge</td></tr>${rows}</table>` : "<p>No DraftKings line yet.</p>"}
+          ${rows ? `<table class="mkts"><tr><td class="neg">Our model, best side</td><td class="neg">Edge</td></tr>${rows}</table>` : "<p>No DraftKings line yet.</p>"}
+          ${g.market ? `<table class="mkts"><tr><td class="neg">Best price anywhere (fair line: ${esc(g.home_abbr || g.home)} ${sgn(-g.market.fair.margin)}, total ${n1(g.market.fair.total)})</td><td class="neg">Edge</td></tr>${
+            Object.entries(g.market.best).map(([mk, b]) => `<tr><td>${MK[mk]}: ${pickText(g, mk, b)} ${am(b.odds)} at ${esc(b.book_title)}</td><td class="${b.ev >= D.odds_min_ev ? "pos" : "neg"}">${spct(b.ev)}</td></tr>`).join("")}</table>` : ""}
         </div></div>`;
     });
     h += `</div>`;
@@ -362,7 +393,15 @@ function tonight() {
 
 function results() {
   const R = D.record; let any = false, h = "";
-  h += `<h2>My results</h2><p class="lede">Every flagged bet, graded at the price when the model first flagged it.</p>`;
+  h += `<h2>My results</h2><p class="lede">Every flagged bet, graded at the price when it was first flagged.</p>`;
+  const panel = (o, title, clvUnit) => `<section class="panel"><div class="row"><h3>${title}</h3><span class="sub">${o.n} bets</span></div>
+      <div class="row"><div class="big ${o.units >= 0 ? "pos" : ""}">${o.units >= 0 ? "+" : "−"}${Math.abs(o.units).toFixed(1)} units</div>
+      <div class="big">${o.w}–${o.l}${o.push ? "–" + o.push : ""}</div></div>
+      <p class="sub">${spct(o.roi)} return on ${o.risked ? o.risked.toFixed(1) : o.n} units risked.${o.clv_n ? ` The ${clvUnit} moved our way on ${Math.round(100 * o.clv_pos / o.clv_n)}% of bets.` : ""}</p></section>`;
+  const PR = R.price || {};
+  if (["spread", "total", "ml"].some(k => PR[k] && PR[k].n)) h += `<h2>Best prices</h2>`;
+  for (const mk of ["spread", "total", "ml"]) if (PR[mk] && PR[mk].n) { any = true; h += panel(PR[mk], MK[mk] + "s", "fair line"); }
+  if (any) h += `<h2>Model picks</h2>`;
   for (const mk of ["spread", "total", "ml"]) {
     const o = R[mk]; if (!o || !o.n) continue; any = true;
     h += `<section class="panel"><div class="row"><h3>${MK[mk]}s</h3><span class="sub">${o.n} bets</span></div>
@@ -404,7 +443,7 @@ function checkView() {
     h += `<section class="panel"><h3>Moneylines</h3>${D.params.ml_flag ? "" : `<p class="sub">Moneyline bets are no longer flagged: in testing they lost money, so treat moneyline edges as unreliable.</p>`}${c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} on units risked (likely range ${spct(c.roi - 2 * c.se, 0)} to ${spct(c.roi + 2 * c.se, 0)}).</p>` : `<p class="sub">No flagged bets in this period.</p>`}${details(s, "ml")}</section>`;
   }
   const p = D.params;
-  h += `<p class="fine">How the forecast is built: ${Math.round(100 * (1 - p.mix_margin))}% points model and ${Math.round(100 * p.mix_margin)}% efficiency model, then blended ${Math.round(100 * p.w_margin)}% with ${Math.round(100 * (1 - p.w_margin))}% DraftKings for margins (totals ${Math.round(100 * p.w_total)}/${Math.round(100 * (1 - p.w_total))}). All weights are fit on last season. ${D.home_word ? D.home_word[0].toUpperCase() + D.home_word.slice(1) : "Home court"} is worth ${n1(D.hca)} points.</p>`;
+  h += `<p class="fine">How the forecast is built: ${Math.round(100 * (1 - p.mix_margin))}% points model and ${Math.round(100 * p.mix_margin)}% efficiency model, then blended ${Math.round(100 * p.w_margin)}% with ${Math.round(100 * (1 - p.w_margin))}% DraftKings for margins (totals ${Math.round(100 * p.w_total)}/${Math.round(100 * (1 - p.w_total))}). All weights are fit on last season. ${D.home_word ? D.home_word[0].toUpperCase() + D.home_word.slice(1) : "Home court"} is worth ${n1(D.hca)} points.${D.rest_w ? ` Each extra day of rest over the opponent is worth ${n1(D.rest_w * (D.sport === "nfl" ? 1 / 7 : 1))} points.` : ""}${p.inj_k ? ` A missing rotation player costs about ${n1(p.inj_k * 6)} points for a typical starter (fit from past games).` : ""}${p.key_w ? " NFL spreads account for key numbers: final margins of 3 and 7 happen far more often than other margins." : ""}</p>`;
   $("#m").innerHTML = h;
   document.querySelectorAll(".seg button").forEach(b => b.onclick = () => { season = b.dataset.s; checkView(); });
 }
