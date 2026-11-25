@@ -2,7 +2,7 @@ name: update
 
 on:
   schedule:
-    - cron: "23 */2 * * *"   # every 2 hours: new lines, scores, picks
+    - cron: "23 * * * *"     # hourly: new lines, scores, picks (sportsbook odds on their own budget)
     - cron: "41 9 * * 1"     # Mondays: re-tune parameters and rerun the backtest
   workflow_dispatch:
     inputs:
@@ -29,6 +29,8 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Run model
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
           MODE="${{ github.event.inputs.mode }}"
           if [ "${{ github.event.schedule }}" = "41 9 * * 1" ]; then MODE=tune; fi

@@ -11,7 +11,7 @@ at a reduced weight so early-season ratings start from last year instead of from
 Ridge shrinks every team toward average, which matters when a team has played 4 games.
 """
 import math
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 import numpy as np
 import pandas as pd
@@ -30,6 +30,9 @@ class Params:
     margin_sd: float = 11.0      # sd of (actual margin - model margin); set by tuning
     total_sd: float = 17.5       # sd of (actual total - model total); set by tuning
     min_ev: float = 0.03         # EV per unit needed to flag a play
+    key_w: dict = None           # NFL: how much likelier each final margin (3, 7, ...) is than a smooth curve says
+    rest_w: float = 0.0          # points per unit of rest advantage (fit inside the ratings)
+    inj_k: float = 0.0           # NBA: points of margin per unit of missing player value (tuned)
     ml_flag: bool = False        # backtest: flagged moneylines lost ~7%/bet, so they're shown but not flagged
     w_margin: float = 0.3        # weight on the model vs the market line for the margin (tuned)
     w_total: float = 0.3         # same for the total (tuned)
@@ -56,18 +59,19 @@ def pooled_ids(games, pool_min):
 
 
 class Ratings:
-    def __init__(self, mu, hca, off, dfn, names, n_games):
+    def __init__(self, mu, hca, off, dfn, names, n_games, rest_w=0.0):
         self.mu, self.hca, self.off, self.dfn = mu, hca, off, dfn
-        self.names, self.n_games = names, n_games
+        self.names, self.n_games, self.rest_w = names, n_games, rest_w
 
     def _get(self, tid, pool):
         tid = POOL if tid in pool or tid not in self.off else tid
         return self.off.get(tid, 0.0), self.dfn.get(tid, 0.0)
 
-    def predict(self, home_id, away_id, neutral, pool=()):
+    def predict(self, home_id, away_id, neutral, pool=(), rest=0.0):
         oh, dh = self._get(home_id, pool)
         oa, da = self._get(away_id, pool)
-        adv = 0.0 if neutral else self.hca / 2
+        rest = 0.0 if rest is None or rest != rest else float(rest)  # missing/NaN -> no effect
+        adv = (0.0 if neutral else self.hca / 2) + self.rest_w * rest / 2
         hp = self.mu + oh + da + adv
         ap = self.mu + oa + dh - adv
         return hp - ap, hp + ap, hp, ap
@@ -102,23 +106,27 @@ def fit(done, as_of, season, p, pool):
     ai = np.array([ix[x] for x in aid])
     adv = np.where(g["neutral"].to_numpy() == 1, 0.0, 0.5)
 
-    # columns: 0 mu, 1 hca, 2..n+1 offense, n+2..2n+1 defense
+    # columns: 0 mu, 1 hca, 2..n+1 offense, n+2..2n+1 defense, 2n+2 rest advantage
+    rf = (g["rest_f"].fillna(0).to_numpy(float) / 2) if "rest_f" in g.columns else np.zeros(m)
     r = np.arange(2 * m)
-    rows = np.concatenate([r, r, r, r])
+    rows = np.concatenate([r, r, r, r, r])
     cols = np.concatenate([
         np.zeros(2 * m, int), np.ones(2 * m, int),
         np.concatenate([2 + hi, 2 + ai]),
         np.concatenate([2 + n + ai, 2 + n + hi]),
+        np.full(2 * m, 2 * n + 2),
     ])
-    vals = np.concatenate([np.ones(2 * m), np.concatenate([adv, -adv]), np.ones(2 * m), np.ones(2 * m)])
-    X = sp.csr_matrix((vals, (rows, cols)), shape=(2 * m, 2 * n + 2))
+    vals = np.concatenate([np.ones(2 * m), np.concatenate([adv, -adv]), np.ones(2 * m), np.ones(2 * m),
+                           np.concatenate([rf, -rf])])
+    X = sp.csr_matrix((vals, (rows, cols)), shape=(2 * m, 2 * n + 3))
     y = np.concatenate([g["home_score"].to_numpy(float), g["away_score"].to_numpy(float)])
     W = np.concatenate([w, w])
 
     XtW = X.T.multiply(W)
     A = (XtW @ X).tocsc()
-    pen = np.full(2 * n + 2, p.lam)
+    pen = np.full(2 * n + 3, p.lam)
     pen[:2] = 1e-6
+    pen[-1] = 1.0  # rest effect: lightly shrunk toward zero
     A = A.tolil()
     A.setdiag(A.diagonal() + pen)
     A = A.tocsc()
@@ -130,7 +138,7 @@ def fit(done, as_of, season, p, pool):
     cnt = pd.concat([g.loc[cur, "home_id"], g.loc[cur, "away_id"]]).value_counts().to_dict()
     off = {tm: beta[2 + i] for tm, i in ix.items()}
     dfn = {tm: beta[2 + n + i] for tm, i in ix.items()}
-    return Ratings(beta[0], beta[1], off, dfn, names, cnt)
+    return Ratings(beta[0], beta[1], off, dfn, names, cnt, float(beta[2 * n + 2]))
 
 
 # ---------- pricing ----------
@@ -148,6 +156,41 @@ def prob_over(mean, sd, line):
         push = 0.0
         win = 1 - _phi((math.floor(line) + 0.5 - mean) / sd)
     return win, push
+
+
+def _pmf(mean, sd, key_w):
+    ks = np.arange(-90, 91)
+    cdf = np.array([_phi((k + 0.5 - mean) / sd) for k in ks]) - np.array([_phi((k - 0.5 - mean) / sd) for k in ks])
+    w = np.array([float(key_w.get(str(abs(int(k))), key_w.get(abs(int(k)), 1.0))) for k in ks])
+    p = cdf * w
+    return ks, p / p.sum()
+
+
+def margin_probs(mean, sd, line, key_w=None):
+    """Like prob_over, but for football margins it uses the real shape of final margins:
+    3 and 7 are far more common than a smooth curve predicts."""
+    if not key_w:
+        return prob_over(mean, sd, line)
+    ks, pm = _pmf(mean, sd, key_w)
+    return float(pm[ks > line].sum()), float(pm[ks == line].sum()) if float(line).is_integer() else 0.0
+
+
+def fit_key_weights(margins, means, sd, kmax=24, smooth=6.0):
+    """Observed count of each |final margin| vs what a smooth normal curve expects, shrunk
+    toward 1 so thin data doesn't invent spikes."""
+    obs = np.zeros(kmax + 1)
+    exp = np.zeros(kmax + 1)
+    for y, m in zip(margins, means):
+        a = int(abs(round(y)))
+        if a <= kmax:
+            obs[a] += 1
+        for k in range(kmax + 1):
+            pk = _phi((k + 0.5 - m) / sd) - _phi((k - 0.5 - m) / sd)
+            if k:
+                pk += _phi((-k + 0.5 - m) / sd) - _phi((-k - 0.5 - m) / sd)
+            exp[k] += pk
+    w = (obs + smooth) / (exp + smooth)
+    return {str(k): round(float(min(3.5, max(0.3, w[k]))), 3) for k in range(kmax + 1)}
 
 
 def payout(american):
@@ -182,7 +225,7 @@ def price_game(margin, total, g, p):
     margin, total = blend(margin, total, g, p)
     L = g.get("spread")
     if _ok(L):
-        hw, push = prob_over(margin, p.margin_sd, -L)
+        hw, push = margin_probs(margin, p.margin_sd, -L, p.key_w)
         aw = 1 - hw - push
         ho = g.get("spread_home_odds") if _ok(g.get("spread_home_odds")) else -110
         ao = g.get("spread_away_odds") if _ok(g.get("spread_away_odds")) else -110
@@ -202,7 +245,7 @@ def price_game(margin, total, g, p):
                         "push": push, "line": T}
     mh, ma = g.get("ml_home"), g.get("ml_away")
     if _ok(mh) and _ok(ma):
-        w, tie = prob_over(margin, p.margin_sd, 0)
+        w, tie = margin_probs(margin, p.margin_sd, 0, p.key_w)
         ph = w / (1 - tie)  # no ties in basketball: overtime splits the 0-margin mass
         side = [("home", ph, mh), ("away", 1 - ph, ma)]
         best = max(side, key=lambda s: ev(s[1], 0, s[2]))
@@ -328,10 +371,10 @@ class Combo:
 
     def __init__(self, pts, eff, p):
         self.pts, self.eff, self.p = pts, eff, p
-        self.n_games, self.hca, self.mu = pts.n_games, pts.hca, pts.mu
+        self.n_games, self.hca, self.mu, self.rest_w = pts.n_games, pts.hca, pts.mu, pts.rest_w
 
-    def predict(self, home_id, away_id, neutral, pool=()):
-        m1, t1, _, _ = self.pts.predict(home_id, away_id, neutral, pool)
+    def predict(self, home_id, away_id, neutral, pool=(), rest=0.0):
+        m1, t1, _, _ = self.pts.predict(home_id, away_id, neutral, pool, rest)
         if self.eff is None:
             m, t = m1, t1
         else:
@@ -356,3 +399,22 @@ def fit_all(done, as_of, season, p, pool):
     if pts is None:
         return None
     return Combo(pts, fit_eff(done, as_of, season, p, pool), p)
+
+
+def add_rest(games, sport):
+    """Days since each team's previous game -> one 'rest advantage' number per game (home minus
+    away, capped). Back-to-backs in basketball, short weeks and byes in football."""
+    if games.empty:
+        return games
+    lo, hi, scale = sport.rest_cap
+    g = games.reset_index(drop=True).copy()
+    t = pd.to_datetime(g["date"], utc=True)
+    long = pd.concat([pd.DataFrame({"i": g.index, "side": "h", "team": g["home_id"], "t": t}),
+                      pd.DataFrame({"i": g.index, "side": "a", "team": g["away_id"], "t": t})])
+    long = long.sort_values(["team", "t"])
+    long["rest"] = (long.groupby("team")["t"].diff().dt.total_seconds() / 86400).fillna(hi).clip(lo, hi)
+    piv = long.pivot(index="i", columns="side", values="rest")
+    g["rest_h"] = piv["h"].reindex(g.index).fillna(hi).round()
+    g["rest_a"] = piv["a"].reindex(g.index).fillna(hi).round()
+    g["rest_f"] = (g["rest_h"] - g["rest_a"]) / scale
+    return g

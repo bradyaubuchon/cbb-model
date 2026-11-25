@@ -13,7 +13,7 @@ from . import store
 
 DOCS = store.ROOT / "docs"
 WEB = store.ROOT / "cbb" / "web"
-APP_RELEASE = "3.1"  # bump for notable app changes; the build hash changes automatically
+APP_RELEASE = "4.0"  # bump for notable app changes; the build hash changes automatically
 
 
 def _clean(x):
@@ -33,7 +33,7 @@ def app_version():
     return f"{APP_RELEASE}-{h.hexdigest()[:7]}"
 
 
-def render(sport, slate, ratings, rec, bt, p, now, calibrated=True):
+def render(sport, slate, ratings, rec, bt, p, now, calibrated=True, odds_time=None):
     """Write docs/data-<sport>.json. Returns its content hash (the data version)."""
     tab = ratings.table().head(400)
     data = {
@@ -42,12 +42,14 @@ def render(sport, slate, ratings, rec, bt, p, now, calibrated=True):
         "updated_iso": now.isoformat(),
         "params": p.to_dict(),
         "calibrated": calibrated,
+        "odds_time": odds_time,
+        "odds_min_ev": 0.02,
         "home_word": store.SPORT.home_word,
         "horizon_h": store.SPORT.horizon_h,
         "slate": slate,
         "record": rec,
         "backtest": bt,
-        "hca": ratings.hca, "mu": ratings.mu,
+        "hca": ratings.hca, "mu": ratings.mu, "rest_w": getattr(ratings, "rest_w", 0.0),
         "ratings": tab[[c for c in ("team", "off", "def", "net", "games", "adj_o", "adj_d", "adj_em", "tempo")
                         if c in tab.columns]].round(2).to_dict("records"),
     }

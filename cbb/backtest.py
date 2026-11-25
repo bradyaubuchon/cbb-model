@@ -15,6 +15,8 @@ BUCKETS = [(0.0, 0.03), (0.03, 0.06), (0.06, 0.10), (0.10, 0.15), (0.15, 9.0)]
 
 def walk_forward(games, p, seasons, step=1, skip_days=0, which=("pts", "eff")):
     """Per-game out-of-sample forecasts from each model plus the tuned mix."""
+    if "rest_f" not in games.columns:
+        games = model.add_rest(games, store.SPORT)
     done = store.finished(games).copy()
     pool = model.pooled_ids(done, p.pool_min)
     done["et_day"] = store.to_et_date(done["date"])
@@ -37,7 +39,8 @@ def walk_forward(games, p, seasons, step=1, skip_days=0, which=("pts", "eff")):
             for g in sg[sg["et_day"] == day].to_dict("records"):
                 row = dict(g)
                 if rp is not None:
-                    row["pm_pts"], row["pt_pts"], _, _ = rp.predict(g["home_id"], g["away_id"], g["neutral"] == 1, pool)
+                    row["pm_pts"], row["pt_pts"], _, _ = rp.predict(g["home_id"], g["away_id"], g["neutral"] == 1, pool,
+                                                                     g.get("rest_f"))
                 if re is not None:
                     row["pm_eff"], row["pt_eff"], _, _ = re.predict(g["home_id"], g["away_id"], g["neutral"] == 1, pool)
                 if "pm_pts" in row or "pm_eff" in row:
@@ -53,6 +56,10 @@ def walk_forward(games, p, seasons, step=1, skip_days=0, which=("pts", "eff")):
     df["pt_eff"] = df["pt_eff"].fillna(df["pt_pts"])
     df["pm_pts"] = df["pm_pts"].fillna(df["pm_eff"])
     df["pt_pts"] = df["pt_pts"].fillna(df["pt_eff"])
+    if "inj_f" in df.columns and p.inj_k:
+        adj = p.inj_k * df["inj_f"].fillna(0)
+        df["pm_pts"] += adj
+        df["pm_eff"] += adj
     df["pred_margin"] = (1 - p.mix_margin) * df["pm_pts"] + p.mix_margin * df["pm_eff"]
     df["pred_total"] = (1 - p.mix_total) * df["pt_pts"] + p.mix_total * df["pt_eff"]
     return df

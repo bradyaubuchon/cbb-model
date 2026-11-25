@@ -7,7 +7,7 @@ import time
 
 import pandas as pd
 
-from . import backtest, espn, model, site, store
+from . import backtest, espn, injuries, model, odds, site, store
 from .sports import ORDER
 
 
@@ -122,12 +122,28 @@ def do_tune(games, cur):
     print(f"Tuning both models on seasons {seasons} (walk-forward)...", flush=True)
     best, log = backtest.tune(games, seasons)
     pred = backtest.walk_forward(games, best, seasons, step=1)
+    if not pred.empty and "inj_f" in pred.columns:
+        f = pred["inj_f"].fillna(0).to_numpy()
+        r = ((pred["home_score"] - pred["away_score"]) - pred["pred_margin"]).to_numpy()
+        if (f != 0).sum() >= 200:
+            best.inj_k = round(float((r * f).sum() / (f * f).sum()), 3)
+            for c in ("pm_pts", "pm_eff", "pred_margin"):
+                pred[c] = pred[c] + best.inj_k * f
+            print(f"Injury effect: {best.inj_k} pts of margin per unit of missing value "
+                  f"({int((f != 0).sum())} games with a rotation player out)", flush=True)
     mix = backtest.fit_mix(pred) if not pred.empty else {}
     if "margin" in mix:
         best.mix_margin, best.w_margin, best.margin_sd = mix["margin"]["mix"], mix["margin"]["w"], round(mix["margin"]["sd"], 2)
     if "total" in mix:
         best.mix_total, best.w_total, best.total_sd = mix["total"]["mix"], mix["total"]["w"], round(mix["total"]["sd"], 2)
     print("Mix/blend fit:", json.dumps(mix, indent=1), flush=True)
+    if store.SPORT.key == "nfl" and not pred.empty:  # key numbers: 3, 7, 10...
+        allp = backtest.walk_forward(games, best, [cur - 2, cur - 1, cur], step=3)
+        if len(allp) >= 300:  # every game we have; market line as the expected margin where known
+            mean = (-allp["spread"]).fillna(allp["pred_margin"])
+            best.key_w = model.fit_key_weights((allp["home_score"] - allp["away_score"]).to_numpy(),
+                                               mean.to_numpy(), best.margin_sd, smooth=15.0)
+            print("NFL key-number weights:", {k: v for k, v in best.key_w.items() if v > 1.2}, flush=True)
     has_box = "h_fga" in games.columns and int(store.finished(games).query("season == @cur - 1")["h_fga"].notna().sum())
     store.PARAMS.write_text(json.dumps({**best.to_dict(), "blend_fit": "margin" in mix, "box_games_at_tune": has_box, "box_complete": BOX_DONE[0],
                                         "mix_fit": mix, "tune_log": log}, indent=1, default=float))
@@ -140,8 +156,13 @@ def update_picks(games, ratings, pool, p, now_utc):
     t = pd.to_datetime(games["date"], utc=True)
     upcoming = games[(games["state"] == "pre") & (t > now_utc) & (t < now_utc + pd.Timedelta(hours=store.SPORT.horizon_h))]
     slate = []
+    inj_f, inj_detail = {}, {}
+    if store.SPORT.key == "nba" and not upcoming.empty:
+        inj_f, inj_detail = injuries.upcoming_missing(games, upcoming.to_dict("records"))
     for g in upcoming.to_dict("records"):
-        mg, tot, hp, ap = ratings.predict(g["home_id"], g["away_id"], g["neutral"] == 1, pool)
+        mg, tot, hp, ap = ratings.predict(g["home_id"], g["away_id"], g["neutral"] == 1, pool, g.get("rest_f"))
+        adj = p.inj_k * inj_f.get(g["id"], 0.0)
+        mg, hp, ap = mg + adj, hp + adj / 2, ap - adj / 2
         priced = model.price_game(mg, tot, g, p)
         snap = {"time": now_utc.isoformat(), "pred_margin": mg, "pred_total": tot, "bets": priced,
                 "spread": g.get("spread"), "total": g.get("total"),
@@ -152,12 +173,14 @@ def update_picks(games, ratings, pool, p, now_utc):
                                     "first": snap}
         if rec is not None:
             rec["last"] = snap
-        slate.append({**{k: g.get(k) for k in ("id", "date", "home", "away", "home_abbr", "away_abbr", "neutral", "spread", "total",
+        slate.append({**{k: g.get(k) for k in ("id", "date", "home", "away", "home_abbr", "away_abbr", "home_full", "away_full", "neutral", "spread", "total",
                                                "ml_home", "ml_away", "book", "spread_open", "total_open")},
                       "pred_home": hp, "pred_away": ap, "pred_margin": mg, "pred_total": tot,
                       "blend_margin": model.blend(mg, tot, g, p)[0], "blend_total": model.blend(mg, tot, g, p)[1],
                       "home_games": ratings.n_games.get(g["home_id"], 0),
                       "away_games": ratings.n_games.get(g["away_id"], 0),
+                      "rest_h": g.get("rest_h"), "rest_a": g.get("rest_a"),
+                      "injuries": inj_detail.get(g["id"], []), "inj_adj": adj,
                       "bets": priced})
     # attach final scores
     fin = store.finished(games).set_index("id")
@@ -166,6 +189,64 @@ def update_picks(games, ratings, pool, p, now_utc):
             rec["final"] = [float(fin.at[gid, "home_score"]), float(fin.at[gid, "away_score"])]
     store.PICKS.write_text(json.dumps(picks, indent=0, default=float))
     return picks, sorted(slate, key=lambda s: s["date"])
+
+
+def log_market(slate, picks):
+    """Log each price edge the first time it's flagged (what you could have bet), and keep the
+    latest fair line before tip so closing value can be measured."""
+    for g in slate:
+        mk = g.get("market")
+        if not mk:
+            continue
+        rec = picks.setdefault(g["id"], {"id": g["id"], "date": g["date"], "home": g["home"], "away": g["away"]})
+        first = rec.setdefault("mkt_first", {})
+        for m, b in mk["best"].items():
+            if b["ev"] >= odds.MIN_EV and m not in first:
+                first[m] = {**b, "time": mk["snap_time"]}
+        rec["mkt_fair_last"] = mk["fair"]
+    store.PICKS.write_text(json.dumps(picks, indent=0, default=float))
+
+
+def _fair_p(b, fv, p):
+    """Chance the logged bet wins under a fair line (for closing value)."""
+    if not fv:
+        return None
+    if b["market"] == "spread" and fv.get("margin") is not None:
+        hp = b["line"] if b["side"] == "home" else -b["line"]
+        w, push = model.margin_probs(fv["margin"], p.margin_sd, -hp, p.key_w)
+        return w if b["side"] == "home" else 1 - w - push
+    if b["market"] == "total" and fv.get("total") is not None:
+        w, push = model.prob_over(fv["total"], p.total_sd, b["line"])
+        return w if b["side"] == "over" else 1 - w - push
+    if b["market"] == "ml" and fv.get("home_p") is not None:
+        return fv["home_p"] if b["side"] == "home" else 1 - fv["home_p"]
+    return None
+
+
+def record_market(picks, p):
+    out = {mk: {"n": 0, "w": 0, "l": 0, "push": 0, "units": 0.0, "risked": 0.0, "clv_sum": 0.0, "clv_n": 0, "clv_pos": 0}
+           for mk in ("spread", "total", "ml")}
+    for rec in picks.values():
+        if "final" not in rec or not rec.get("mkt_first"):
+            continue
+        hs, as_ = rec["final"]
+        for mk, b in rec["mkt_first"].items():
+            o = out[mk]
+            prof = model.grade(b, mk, hs, as_)
+            o["n"] += 1
+            o["units"] += prof
+            o["risked"] += model.stake(b["odds"])
+            o["w" if prof > 0 else "l" if prof < 0 else "push"] += 1
+            pl = _fair_p(b, rec.get("mkt_fair_last"), p)
+            if pl is not None:
+                clv = (pl - b["p"]) * 100  # change in fair win chance, percentage points
+                o["clv_sum"] += clv
+                o["clv_n"] += 1
+                o["clv_pos"] += clv > 0
+    for o in out.values():
+        o["roi"] = o["units"] / o["risked"] if o["risked"] else None
+        o["avg_clv"] = o["clv_sum"] / o["clv_n"] if o["clv_n"] else None
+    return out
 
 
 def record(picks, p):
@@ -228,6 +309,11 @@ def update(sport, budget):
         print("No games yet.", flush=True)
         return None
     games, box_left = backfill_summaries(games, cur, budget=budget)
+    games = model.add_rest(games, store.SPORT)
+    if sport == "nba":
+        injuries.backfill(games, cur, budget=1500)
+        miss = injuries.missing_by_game(games)
+        games["inj_f"] = games["id"].map(miss)
 
     # tune the first time, and again as soon as last season's lines are in (blend weights need them)
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
@@ -246,9 +332,20 @@ def update(sport, budget):
     pool = model.pooled_ids(done, p.pool_min)
     ratings = model.fit_all(done[pd.to_datetime(done["date"], utc=True) < now_utc], now_utc, cur, p, pool)
     picks, slate = update_picks(games, ratings, pool, p, now_utc)
+    snap_time = None
+    if slate:
+        try:
+            snap_time = odds.apply(slate, p, 3, now)
+            log_market(slate, picks)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"  ! sportsbook comparison failed: {e}", flush=True)
     bt = json.loads(store.BACKTEST.read_text()) if store.BACKTEST.exists() else {}
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
-    ver = site.render(sport, slate, ratings, record(picks, p), bt, p, now, calibrated=bool(meta.get("blend_fit")))
+    rec = {**record(picks, p), "price": record_market(picks, p)}
+    ver = site.render(sport, slate, ratings, rec, bt, p, now, calibrated=bool(meta.get("blend_fit")),
+                      odds_time=snap_time)
     print(f"Slate: {len(slate)} games priced. Site written.", flush=True)
     return ver
 
@@ -263,7 +360,9 @@ def run_all(cmd, only=None):
         try:
             if cmd in ("tune", "backtest"):
                 store.set_sport(sport)
-                games = store.load_games()
+                games = model.add_rest(store.load_games(), store.SPORT)
+                if sport == "nba":
+                    games["inj_f"] = games["id"].map(injuries.missing_by_game(games))
                 if not games.empty:
                     cur = store.season_of(store.now_et().date())
                     p = do_tune(games, cur) if cmd == "tune" else load_params()

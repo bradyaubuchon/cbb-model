@@ -26,7 +26,9 @@ def set_sport(key):
 def migrate_legacy():
     """Before multi-sport, college data lived directly in data/. Move it to data/ncaam/."""
     old = ROOT / "data"
-    files = [f for f in old.iterdir() if f.is_file()] if old.exists() else []
+    if not (old / "games.csv").exists():  # already migrated (other root files, like odds_state.json, stay put)
+        return
+    files = [f for f in old.iterdir() if f.is_file() and f.name != "odds_state.json"]
     if files:
         dest = old / "ncaam"
         dest.mkdir(exist_ok=True)

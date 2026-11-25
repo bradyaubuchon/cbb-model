@@ -98,9 +98,9 @@ def fake_day(day, sport):
                 "status": {"type": {"state": "post" if final else "pre", "completed": final}},
                 "competitors": [
                     {"homeAway": "home", "score": str(hs) if final else "0",
-                     "team": {"id": str(h), "shortDisplayName": f"Team {h}", "abbreviation": f"T{h}"}},
+                     "team": {"id": str(h), "shortDisplayName": f"Team {h}", "displayName": f"Team {h} Hawks", "abbreviation": f"T{h}"}},
                     {"homeAway": "away", "score": str(as_) if final else "0",
-                     "team": {"id": str(aid), "shortDisplayName": f"Team {aid}", "abbreviation": f"T{aid}"}},
+                     "team": {"id": str(aid), "shortDisplayName": f"Team {aid}", "displayName": f"Team {aid} Hawks", "abbreviation": f"T{aid}"}},
                 ],
                 "odds": [] if final else odds,  # like ESPN: lines vanish after tip
             }],
@@ -124,3 +124,60 @@ def fake_summary(event_id, sport):
             {"name": "offensiveRebounds", "displayValue": str(b["oreb"])},
             {"name": "totalTurnovers", "displayValue": str(b["to"])}]}
     return {"pickcenter": odds, "boxscore": {"teams": [team(aid, box["a"]), team(hid, box["h"])]}}
+
+
+def fake_odds(sport):
+    """Odds API-shaped events for the next two days: Pinnacle near-fair, soft books noisy."""
+    import random
+    rnd = random.Random(1)
+    out = []
+    for k in range(0, 3):
+        day = (TODAY + dt.timedelta(days=k)).strftime("%Y%m%d")
+        for e in fake_day(day, sport):
+            c = e["competitions"][0]
+            if not c["odds"] and True:
+                continue
+            o = c["odds"][0]
+            h = next(x for x in c["competitors"] if x["homeAway"] == "home")["team"]["displayName"]
+            a = next(x for x in c["competitors"] if x["homeAway"] == "away")["team"]["displayName"]
+            sp, tot = o["spread"], o["overUnder"]
+            def book(key, title, ds, dt_, vig):
+                return {"key": key, "title": title, "markets": [
+                    {"key": "spreads", "outcomes": [{"name": h, "price": -100 - vig + rnd.randint(-8, 8), "point": sp + ds},
+                                                    {"name": a, "price": -100 - vig + rnd.randint(-8, 8), "point": -(sp + ds)}]},
+                    {"key": "totals", "outcomes": [{"name": "Over", "price": -100 - vig, "point": tot + dt_},
+                                                   {"name": "Under", "price": -100 - vig, "point": tot + dt_}]},
+                    {"key": "h2h", "outcomes": [{"name": h, "price": o["homeTeamOdds"]["moneyLine"]},
+                                                {"name": a, "price": o["awayTeamOdds"]["moneyLine"]}]}]}
+            out.append({"id": e["id"], "commence_time": e["date"].replace("Z", ":00Z"), "home_team": h, "away_team": a,
+                        "bookmakers": [book("pinnacle", "Pinnacle", 0, 0, 3),
+                                       book("draftkings", "DraftKings", rnd.choice([0, 0, 0.5, -0.5, 1]), rnd.choice([0, 0.5, -1]), 10),
+                                       book("fanduel", "FanDuel", rnd.choice([0, 0, -0.5, 1.5]), rnd.choice([0, -0.5, 1]), 10)]})
+    return out
+
+
+def fake_players(g):
+    """Box score players for a fake NBA game: 10 per team, some sit out."""
+    import random
+    rnd = random.Random(hash(g["id"]) & 0xffffffff)
+    def team(tid):
+        ath = []
+        for j in range(10):
+            dnp = rnd.random() < 0.08
+            mins = 0 if dnp else max(4, int(36 - 3 * j + rnd.gauss(0, 4)))
+            pts = 0 if dnp else max(0, int(mins * (0.75 - 0.04 * j) + rnd.gauss(0, 4)))
+            fga = max(pts // 2, 0)
+            ath.append({"athlete": {"id": f"{tid}-{j}", "displayName": f"Player {tid}-{j}"}, "didNotPlay": dnp,
+                        "stats": [] if dnp else [str(mins), str(pts), f"{fga // 2}-{fga}", "0-0", "2-3", "3", "1", "1",
+                                                 "1", "0", "1", "2", "1", "0"]})
+        return {"team": {"id": str(tid)}, "statistics": [{"keys": [
+            "minutes", "points", "fieldGoalsMade-fieldGoalsAttempted", "threePointFieldGoalsMade-threePointFieldGoalsAttempted",
+            "freeThrowsMade-freeThrowsAttempted", "rebounds", "assists", "turnovers", "steals", "blocks",
+            "offensiveRebounds", "defensiveRebounds", "fouls", "plusMinus"], "athletes": ath}]}
+    return {"boxscore": {"players": [team(g["home_id"]), team(g["away_id"])]}}
+
+
+def fake_injuries():
+    return {"injuries": [{"displayName": f"Team {t} Hawks",
+                          "injuries": [{"status": "Out", "athlete": {"displayName": f"Player {t}-0"}}]}
+                         for t in range(0, 30, 3)]}

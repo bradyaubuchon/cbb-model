@@ -199,9 +199,11 @@ def parse_event(e):
         "home_id": str(_dig(h, "team", "id")),
         "home": _dig(h, "team", "shortDisplayName") or _dig(h, "team", "displayName"),
         "home_abbr": _dig(h, "team", "abbreviation"),
+        "home_full": _dig(h, "team", "displayName"),
         "away_id": str(_dig(a, "team", "id")),
         "away": _dig(a, "team", "shortDisplayName") or _dig(a, "team", "displayName"),
         "away_abbr": _dig(a, "team", "abbreviation"),
+        "away_full": _dig(a, "team", "displayName"),
         "home_score": None,
         "away_score": None,
     }
