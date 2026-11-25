@@ -72,6 +72,7 @@ h3{font:600 17px/1.3 Barlow,sans-serif;margin:0 0 6px}
 .pick{font:700 38px/1 var(--cond);letter-spacing:.2px;margin:2px 0 6px}
 .pick small{font:600 18px var(--cond);color:var(--muted);margin-left:6px}
 .matchup{margin:0;font-weight:500}
+.stake{margin:4px 0 0;font:600 17px var(--cond);color:var(--muted)}
 .why{margin:6px 0 0;color:var(--muted);font-size:15px;grid-column:1/-1}
 .edge{text-align:right;border-radius:10px;padding:8px 10px;min-width:86px}
 .edge b{display:block;font:700 26px/1 var(--cond)}
@@ -161,7 +162,7 @@ footer{max-width:640px;margin:20px auto 0;padding:0 20px;color:var(--muted);font
 </div></nav>
 
 <script>
-const APP = "3.0-7a1b468";
+const APP = "3.1-5f56ef4";
 const SPORTS = [["ncaam", "College"], ["nba", "NBA"], ["nfl", "NFL"]];
 let sport = (() => { try { return localStorage.getItem("sport") || "ncaam"; } catch (e) { return "ncaam"; } })();
 let VER = null;
@@ -239,6 +240,10 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) poll
 
 /* ---------- shared helpers ---------- */
 function teamOf(g, side) { return side === "home" ? g.home : g.away; }
+function stakeText(odds) {
+  const u = x => x.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1") + "U";
+  return odds < 0 ? `Risk ${u(-odds / 100)} to win 1U` : `Risk 1U to win ${u(odds / 100)}`;
+}
 function tier(ev) { return ev >= 0.07 ? {cls: "t-big", label: "Bigger edge"} : {cls: "t-small", label: "Small edge"}; }
 function pickText(g, mk, b) {
   if (mk === "spread") return esc(teamOf(g, b.side)) + " " + sgn(b.line);
@@ -265,13 +270,14 @@ function flagged() {
   return out.sort((a, b) => b.b.ev - a.b.ev);
 }
 function combine(rows) { // pool EV buckets at or above the flag threshold
-  let n = 0, units = 0, v = 0;
+  let n = 0, units = 0, v = 0, R = 0;
   for (const r of rows || []) {
     const lo = parseFloat(r.ev) / 100;
     if (!r.n || lo < D.params.min_ev - 1e-9) continue;
-    n += r.n; units += r.units; v += Math.pow((r.roi_se || 0) * r.n, 2);
+    const risk = r.risked || r.n;
+    n += r.n; units += r.units; R += risk; v += Math.pow((r.roi_se || 0) * risk, 2);
   }
-  return n ? {n, roi: units / n, se: Math.sqrt(v) / n} : null;
+  return n ? {n, units, roi: units / R, se: Math.sqrt(v) / R} : null;
 }
 function trust() {
   if (!D.calibrated) return {cls: "wait", title: "Still calibrating", text: "The model is still loading past results. Treat tonight's numbers as rough and don't bet off them yet."};
@@ -307,7 +313,8 @@ function tonight() {
       <div class="perf" aria-hidden="true"></div>
       <div class="main">
         <div><div class="pick">${pickText(g, mk, b)}<small>${am(b.odds)}</small></div>
-          <p class="matchup">${esc(g.away)} ${g.neutral ? "vs" : "at"} ${esc(g.home)}</p></div>
+          <p class="matchup">${esc(g.away)} ${g.neutral ? "vs" : "at"} ${esc(g.home)}</p>
+          <p class="stake">${stakeText(b.odds)}</p></div>
         <div class="edge"><b>${spct(b.ev)}</b><span>${t.label}</span></div>
         <p class="why">${whyText(g, mk, b)}</p>
         ${thin ? '<p class="note-thin">One team has played fewer than 5 games, so its rating still leans on last season.</p>' : ""}
@@ -342,8 +349,8 @@ function tonight() {
     <dt>Spread</dt><dd>Points added to or taken from a team's score. "Duke −4.5" means Duke has to win by 5 or more for the bet to win.</dd>
     <dt>Total</dt><dd>A bet on whether both teams' points combined go over or under the line.</dd>
     <dt>Moneyline</dt><dd>A bet on who wins outright. +150 pays $150 on a $100 bet; −150 means you bet $150 to win $100.</dd>
-    <dt>Edge</dt><dd>How much we expect to win per dollar bet, using our numbers instead of DraftKings'. +4% means about 4 cents per dollar over the long run, if our numbers are right.</dd>
-    <dt>Units</dt><dd>Profit counted in bet sizes. If you bet $10 a game, +3 units is +$30.</dd>
+    <dt>Edge</dt><dd>How much we expect to win per dollar risked, using our numbers instead of DraftKings'. +4% means about 4 cents per dollar over the long run, if our numbers are right.</dd>
+    <dt>Units</dt><dd>Your standard bet size. Favorites (minus odds) are bet to win 1 unit; underdogs (plus odds) risk 1 unit. With a $10 unit, a −110 bet risks $11 to win $10, and a +150 bet risks $10 to win $15. Return is profit divided by units risked.</dd>
     <dt>Closing line value</dt><dd>Whether the line moved toward our pick before the game started. Beating the closing line regularly is the best early sign that an edge is real.</dd>
   </dl></details>`;
   $("#m").innerHTML = h;
@@ -361,7 +368,7 @@ function results() {
     h += `<section class="panel"><div class="row"><h3>${MK[mk]}s</h3><span class="sub">${o.n} bets</span></div>
       <div class="row"><div class="big ${o.units >= 0 ? "pos" : ""}">${o.units >= 0 ? "+" : "−"}${Math.abs(o.units).toFixed(1)} units</div>
       <div class="big">${o.w}–${o.l}${o.push ? "–" + o.push : ""}</div></div>
-      <p class="sub">${spct(o.roi)} return per bet.${o.clv_n ? ` The line moved our way on ${Math.round(100 * o.clv_pos / o.clv_n)}% of bets (average ${mk === "ml" ? sgn(o.avg_clv) + " pts of win chance" : sgn(o.avg_clv) + " points"}).` : ""}</p></section>`;
+      <p class="sub">${spct(o.roi)} return on ${o.risked ? o.risked.toFixed(1) : o.n} units risked.${o.clv_n ? ` The line moved our way on ${Math.round(100 * o.clv_pos / o.clv_n)}% of bets (average ${mk === "ml" ? sgn(o.avg_clv) + " pts of win chance" : sgn(o.avg_clv) + " points"}).` : ""}</p></section>`;
   }
   if (!any) h += `<div class="empty"><b>No graded bets yet.</b>Bets are graded after games finish. After a few days you'll see wins, losses and units here.</div>`;
   h += `<p class="fine">Win–loss records swing a lot over a few hundred bets. Whether the line moves your way (closing line value) settles much sooner, so watch that number first.</p>`;
@@ -389,12 +396,12 @@ function checkView() {
           <div class="bar"><span>Our model</span><i><b style="width:${100 * ours / mx}%"></b></i><span>${ours.toFixed(2)}</span></div>
           <div class="bar mkt"><span>DraftKings</span><i><b style="width:${100 * dk / mx}%"></b></i><span>${dk.toFixed(2)}</span></div></div>`;
       }
-      h += c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} per bet. Given the sample, the true figure is likely between ${spct(c.roi - 2 * c.se, 0)} and ${spct(c.roi + 2 * c.se, 0)}.</p>`
+      h += c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} on units risked (${c.units >= 0 ? "+" : "−"}${Math.abs(c.units).toFixed(1)}U). Given the sample, the true figure is likely between ${spct(c.roi - 2 * c.se, 0)} and ${spct(c.roi + 2 * c.se, 0)}.</p>`
              : `<p class="sub">No flagged bets in this period.</p>`;
       h += details(s, mk) + `</section>`;
     }
     const c = combine(s.buckets && s.buckets.ml);
-    h += `<section class="panel"><h3>Moneylines</h3>${D.params.ml_flag ? "" : `<p class="sub">Moneyline bets are no longer flagged: in testing they lost money, so treat moneyline edges as unreliable.</p>`}${c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} per bet (likely range ${spct(c.roi - 2 * c.se, 0)} to ${spct(c.roi + 2 * c.se, 0)}).</p>` : `<p class="sub">No flagged bets in this period.</p>`}${details(s, "ml")}</section>`;
+    h += `<section class="panel"><h3>Moneylines</h3>${D.params.ml_flag ? "" : `<p class="sub">Moneyline bets are no longer flagged: in testing they lost money, so treat moneyline edges as unreliable.</p>`}${c ? `<p class="sub"><b>${c.n} flagged bets</b> returned ${spct(c.roi)} on units risked (likely range ${spct(c.roi - 2 * c.se, 0)} to ${spct(c.roi + 2 * c.se, 0)}).</p>` : `<p class="sub">No flagged bets in this period.</p>`}${details(s, "ml")}</section>`;
   }
   const p = D.params;
   h += `<p class="fine">How the forecast is built: ${Math.round(100 * (1 - p.mix_margin))}% points model and ${Math.round(100 * p.mix_margin)}% efficiency model, then blended ${Math.round(100 * p.w_margin)}% with ${Math.round(100 * (1 - p.w_margin))}% DraftKings for margins (totals ${Math.round(100 * p.w_total)}/${Math.round(100 * (1 - p.w_total))}). All weights are fit on last season. ${D.home_word ? D.home_word[0].toUpperCase() + D.home_word.slice(1) : "Home court"} is worth ${n1(D.hca)} points.</p>`;
