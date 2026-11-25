@@ -17,11 +17,12 @@ def _clean(x):
     return x
 
 
-def render(slate, ratings, rec, bt, p, now):
+def render(slate, ratings, rec, bt, p, now, calibrated=True):
     tab = ratings.table().head(400)
     data = {
         "updated": now.strftime("%a %b %-d, %-I:%M %p ET"),
         "params": p.to_dict(),
+        "calibrated": calibrated,
         "slate": slate,
         "record": rec,
         "backtest": bt,
@@ -75,6 +76,7 @@ const MIN=D.params.min_ev;
 // "Priced at" = ratings blended with the market line using the backtest-fit weights
 $('#upd').textContent='Updated '+D.updated+' · flag at EV ≥ '+pct(MIN,0);
 let onlyPlays=false;
+const CAL=D.calibrated?'':'<div class="card warn">Calibrating: historical closing lines are still loading (about a day). Until then the market-blend weights and error sizes are defaults, so treat EVs as rough and don\'t bet off them yet.</div>';
 
 function betLine(g,mk,b){
   if(mk==='spread'){const t=b.side==='home'?g.home:g.away;return t+' '+sgn(b.line)}
@@ -83,7 +85,7 @@ function betLine(g,mk,b){
 }
 function slate(){
   const S=D.slate.filter(g=>!onlyPlays||Object.values(g.bets).some(b=>b.ev>=MIN));
-  let h=`<div class="filters"><label><input type="checkbox" id="op" ${onlyPlays?'checked':''}> Only flagged plays</label><span class="mut">${D.slate.length} games in the next 40h</span></div>`;
+  let h=CAL+`<div class="filters"><label><input type="checkbox" id="op" ${onlyPlays?'checked':''}> Only flagged plays</label><span class="mut">${D.slate.length} games in the next 40h</span></div>`;
   if(!S.length)h+='<p class="note">Nothing to show. Games appear once ESPN posts lines.</p>';
   for(const g of S){
     const t=new Date(g.date).toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit',timeZone:'America/New_York'});

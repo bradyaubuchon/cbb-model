@@ -44,6 +44,46 @@ def pull(days, games, force=()):
     return games
 
 
+LINES_CHECKED = store.DATA / "lines_checked.txt"
+
+
+def backfill_lines(games, cur, budget):
+    """Fill closing lines for finished games from ESPN game summaries, a batch per run,
+    last season first (it is what tuning and the backtest need)."""
+    checked = set(LINES_CHECKED.read_text().split()) if LINES_CHECKED.exists() else set()
+    fin = store.finished(games)
+    todo = fin[fin["spread"].isna() & fin["total"].isna() & (fin["season"] >= cur - 1)
+               & ~fin["id"].isin(checked)]
+    todo = todo.assign(pri=(todo["season"] != cur - 1).astype(int)).sort_values(["pri", "date"])
+    todo = todo.head(budget)
+    if todo.empty:
+        return games, 0
+    print(f"Backfilling closing lines for {len(todo)} games ({len(fin[fin['spread'].isna()])} missing)...", flush=True)
+    idx = games.set_index("id")
+    found = 0
+    for i, g in enumerate(todo.to_dict("records")):
+        try:
+            o = espn.summary_odds(g["id"], g["home_abbr"], g["away_abbr"])
+        except Exception as e:
+            print(f"  ! summary {g['id']}: {e}", flush=True)
+            continue
+        checked.add(g["id"])
+        if o:
+            for k, v in o.items():
+                if v is not None:
+                    idx.at[g["id"], k] = v
+            found += 1
+        if not os.environ.get("CBB_FAKE"):
+            time.sleep(0.25)
+        if (i + 1) % 200 == 0:
+            print(f"  ...{i + 1} done, {found} with lines", flush=True)
+    games = idx.reset_index()
+    games.to_csv(store.GAMES, index=False)
+    LINES_CHECKED.write_text("\n".join(sorted(checked)))
+    print(f"  lines found for {found}/{len(todo)}", flush=True)
+    return games, found
+
+
 def load_params():
     if store.PARAMS.exists():
         return model.Params.from_dict(json.loads(store.PARAMS.read_text()))
@@ -65,7 +105,8 @@ def do_tune(games, cur):
         if "total" in b:
             best.w_total, best.total_sd = b["total"][0], round(b["total"][1], 2)
         print("Blend (weight, sd, blend MAE, market MAE):", b, flush=True)
-    store.PARAMS.write_text(json.dumps({**best.to_dict(), "tune_log": log}, indent=1, default=float))
+    store.PARAMS.write_text(json.dumps({**best.to_dict(), "blend_fit": "margin" in b if not pred.empty else False,
+                                        "tune_log": log}, indent=1, default=float))
     print("Chosen:", best.to_dict(), flush=True)
     return best
 
@@ -156,7 +197,13 @@ def update():
     games = pull(recent, games, force={d.strftime("%Y%m%d") for d in recent})
     print(f"{len(games)} games stored, {len(store.finished(games))} final", flush=True)
 
-    if not store.PARAMS.exists():
+    games, _ = backfill_lines(games, cur, budget=1500)
+
+    # tune the first time, and again as soon as last season's lines are in (blend weights need them)
+    meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
+    last = store.finished(games)
+    last_lines = int(last.loc[last["season"] == cur - 1, "spread"].notna().sum())
+    if not meta or (not meta.get("blend_fit") and last_lines >= 3000):
         p = do_tune(games, cur)
         backtest.run_backtest(games, p, cur)
     p = load_params()
@@ -167,7 +214,8 @@ def update():
     ratings = model.fit(done[pd.to_datetime(done["date"], utc=True) < now_utc], now_utc, cur, p, pool)
     picks, slate = update_picks(games, ratings, pool, p, now_utc)
     bt = json.loads(store.BACKTEST.read_text()) if store.BACKTEST.exists() else {}
-    site.render(slate, ratings, record(picks, p), bt, p, now)
+    meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
+    site.render(slate, ratings, record(picks, p), bt, p, now, calibrated=bool(meta.get("blend_fit")))
     print(f"Slate: {len(slate)} games priced. Site written.", flush=True)
 
 

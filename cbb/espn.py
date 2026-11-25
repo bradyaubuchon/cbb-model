@@ -85,6 +85,57 @@ def _pick_odds(comp):
     return odds[0]
 
 
+def parse_odds(o, home_abbr, away_abbr):
+    """One provider's odds block (scoreboard 'odds' and summary 'pickcenter' share a shape)."""
+    o = o or {}
+    ho, ao = o.get("homeTeamOdds") or {}, o.get("awayTeamOdds") or {}
+    spread = _num(_first(o.get("spread"), _dig(o, "pointSpread", "home", "close", "line")))
+    details = str(o.get("details") or "")
+    # cross-check sign against 'ABBR -7.5' text; trust the text if they disagree
+    parts = details.split()
+    if len(parts) == 2 and _num(parts[1]) is not None:
+        fav_line = -abs(_num(parts[1]))
+        if parts[0] == home_abbr:
+            spread = fav_line
+        elif parts[0] == away_abbr:
+            spread = -fav_line
+    elif details.upper() in ("EVEN", "PK", "PICK"):
+        spread = 0.0
+    row = {
+        "book": _dig(o, "provider", "name"),
+        "spread": spread,
+        "spread_open": _num(_dig(o, "pointSpread", "home", "open", "line")),
+        "spread_home_odds": _num(_first(ho.get("spreadOdds"), _dig(o, "pointSpread", "home", "close", "odds"))),
+        "spread_away_odds": _num(_first(ao.get("spreadOdds"), _dig(o, "pointSpread", "away", "close", "odds"))),
+        "total": _num(_first(o.get("overUnder"), _dig(o, "total", "over", "close", "line"))),
+        "total_open": _num(_dig(o, "total", "over", "open", "line")),
+        "over_odds": _num(_first(o.get("overOdds"), _dig(o, "total", "over", "close", "odds"))),
+        "under_odds": _num(_first(o.get("underOdds"), _dig(o, "total", "under", "close", "odds"))),
+        "ml_home": _num(_first(ho.get("moneyLine"), _dig(o, "moneyline", "home", "close", "odds"))),
+        "ml_away": _num(_first(ao.get("moneyLine"), _dig(o, "moneyline", "away", "close", "odds"))),
+    }
+    # anything between -100 and +100 is not a real American price
+    for k in ("ml_home", "ml_away", "spread_home_odds", "spread_away_odds", "over_odds", "under_odds"):
+        if row[k] is not None and abs(row[k]) < 100:
+            row[k] = None
+    return row
+
+
+SUMMARY = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/summary"
+
+
+def summary_odds(event_id, home_abbr, away_abbr):
+    """Closing lines for a finished game. The scoreboard drops odds after tip; the game
+    summary keeps them under 'pickcenter'."""
+    if os.environ.get("CBB_FAKE"):
+        return None
+    d = _get_json(f"{SUMMARY}?event={event_id}")
+    pc = (d or {}).get("pickcenter") or []
+    if not pc:
+        return None
+    return parse_odds(_pick_odds({"odds": pc}), home_abbr, away_abbr)
+
+
 def parse_event(e):
     comp = (e.get("competitions") or [{}])[0]
     teams = {c.get("homeAway"): c for c in comp.get("competitors") or []}
@@ -115,39 +166,7 @@ def parse_event(e):
     elif state == "post":
         row["state"] = "canceled"  # postponed / canceled / forfeit
 
-    o = _pick_odds(comp)
-    ho, ao = o.get("homeTeamOdds") or {}, o.get("awayTeamOdds") or {}
-
-    spread = _num(_first(o.get("spread"), _dig(o, "pointSpread", "home", "close", "line")))
-    details = str(o.get("details") or "")
-    # cross-check sign against 'ABBR -7.5' text; trust the text if they disagree
-    parts = details.split()
-    if len(parts) == 2 and _num(parts[1]) is not None:
-        fav_line = -abs(_num(parts[1]))
-        if parts[0] == row["home_abbr"]:
-            spread = fav_line
-        elif parts[0] == row["away_abbr"]:
-            spread = -fav_line
-    elif details.upper() in ("EVEN", "PK", "PICK"):
-        spread = 0.0
-
-    row.update({
-        "book": _dig(o, "provider", "name"),
-        "spread": spread,
-        "spread_open": _num(_dig(o, "pointSpread", "home", "open", "line")),
-        "spread_home_odds": _num(_first(ho.get("spreadOdds"), _dig(o, "pointSpread", "home", "close", "odds"))),
-        "spread_away_odds": _num(_first(ao.get("spreadOdds"), _dig(o, "pointSpread", "away", "close", "odds"))),
-        "total": _num(_first(o.get("overUnder"), _dig(o, "total", "over", "close", "line"))),
-        "total_open": _num(_dig(o, "total", "over", "open", "line")),
-        "over_odds": _num(_first(o.get("overOdds"), _dig(o, "total", "over", "close", "odds"))),
-        "under_odds": _num(_first(o.get("underOdds"), _dig(o, "total", "under", "close", "odds"))),
-        "ml_home": _num(_first(ho.get("moneyLine"), _dig(o, "moneyline", "home", "close", "odds"))),
-        "ml_away": _num(_first(ao.get("moneyLine"), _dig(o, "moneyline", "away", "close", "odds"))),
-    })
-    # moneylines between -100 and +100 are not real American odds
-    for k in ("ml_home", "ml_away", "spread_home_odds", "spread_away_odds", "over_odds", "under_odds"):
-        if row[k] is not None and abs(row[k]) < 100:
-            row[k] = None
+    row.update(parse_odds(_pick_odds(comp), row["home_abbr"], row["away_abbr"]))
     return row
 
 
