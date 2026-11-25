@@ -197,7 +197,7 @@ def update():
     games = pull(recent, games, force={d.strftime("%Y%m%d") for d in recent})
     print(f"{len(games)} games stored, {len(store.finished(games))} final", flush=True)
 
-    games, _ = backfill_lines(games, cur, budget=1500)
+    games, _ = backfill_lines(games, cur, budget=4500)
 
     # tune the first time, and again as soon as last season's lines are in (blend weights need them)
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
