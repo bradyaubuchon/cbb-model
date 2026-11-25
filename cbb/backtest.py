@@ -173,7 +173,7 @@ def fit_mix(pred):
     specs = (("margin", "spread", -1, "pm_pts", "pm_eff"), ("total", "total", 1, "pt_pts", "pt_eff"))
     for name, line, sign, c1, c2 in specs:
         g = pred[pred[line].notna()]
-        if len(g) < 300:
+        if len(g) < 200:
             continue
         y = (g["home_score"] - g["away_score"]) if name == "margin" else (g["home_score"] + g["away_score"])
         mkt = (sign * g[line]).to_numpy()

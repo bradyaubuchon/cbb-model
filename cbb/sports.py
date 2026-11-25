@@ -35,7 +35,7 @@ SPORTS = {
         lambda d: d.year + 1 if d.month >= 8 else d.year,                      # 2026-27 season = 2027
         lambda s: _days(dt.date(s - 1, 10, 15), dt.date(s, 6, 25)), "home court"),
     "nfl": Sport(
-        "nfl", "NFL", "football/nfl", "", False, 150,
+        "nfl", "NFL", "football/nfl", "", False, 200,
         lambda d: d.year if d.month >= 3 else d.year - 1,                      # 2026-27 season = 2026
         lambda s: _days(dt.date(s, 9, 1), dt.date(s + 1, 2, 15)), "home field", 168),
 }

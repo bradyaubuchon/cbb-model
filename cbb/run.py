@@ -74,6 +74,8 @@ def backfill_summaries(games, cur, budget):
             odds, box = espn.summary(g["id"], g["home_id"], g["away_id"], g["home_abbr"], g["away_abbr"])
         except Exception as e:
             print(f"  ! summary {g['id']}: {e}", flush=True)
+            if "404" in str(e):
+                checked.add(g["id"])  # ESPN has no page for this game; don't retry forever
             continue
         age = pd.Timestamp.now(tz="UTC") - pd.Timestamp(g["date"])
         if box or age > pd.Timedelta(days=3):
@@ -107,10 +109,19 @@ def load_params():
     return model.Params()
 
 
+def tune_seasons(games, cur):
+    """Last season, plus this season when last season has too few archived closing lines
+    (ESPN's line archive starts in late Nov 2025, which leaves the 2025 NFL season thin)."""
+    fin = store.finished(games)
+    last_lines = int(fin.loc[fin["season"] == cur - 1, "spread"].notna().sum())
+    return [cur - 1] if last_lines >= store.SPORT.min_lines_to_tune else [cur - 1, cur]
+
+
 def do_tune(games, cur):
-    print("Tuning both models on last season (walk-forward)...", flush=True)
-    best, log = backtest.tune(games, [cur - 1])
-    pred = backtest.walk_forward(games, best, [cur - 1], step=1)
+    seasons = tune_seasons(games, cur)
+    print(f"Tuning both models on seasons {seasons} (walk-forward)...", flush=True)
+    best, log = backtest.tune(games, seasons)
+    pred = backtest.walk_forward(games, best, seasons, step=1)
     mix = backtest.fit_mix(pred) if not pred.empty else {}
     if "margin" in mix:
         best.mix_margin, best.w_margin, best.margin_sd = mix["margin"]["mix"], mix["margin"]["w"], round(mix["margin"]["sd"], 2)
@@ -220,7 +231,7 @@ def update(sport, budget):
     # tune the first time, and again as soon as last season's lines are in (blend weights need them)
     meta = json.loads(store.PARAMS.read_text()) if store.PARAMS.exists() else {}
     last = store.finished(games)
-    last_lines = int(last.loc[last["season"] == cur - 1, "spread"].notna().sum())
+    last_lines = int(last.loc[last["season"].isin(tune_seasons(games, cur)), "spread"].notna().sum())
     retune = not meta or (not meta.get("blend_fit") and last_lines >= store.SPORT.min_lines_to_tune) \
         or (box_left == 0 and not meta.get("box_complete"))  # all box scores in: fit the efficiency model
     BOX_DONE[0] = box_left == 0
