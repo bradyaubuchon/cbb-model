@@ -223,6 +223,9 @@ def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "update"
     if cmd == "update":
         update()
+    elif cmd == "diag":
+        from . import diag
+        diag.main()
     elif cmd in ("tune", "backtest"):
         cur = store.season_of(store.now_et().date())
         games = store.load_games()

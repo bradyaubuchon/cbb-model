@@ -33,6 +33,7 @@ jobs:
           MODE="${{ github.event.inputs.mode }}"
           if [ "${{ github.event.schedule }}" = "41 9 * * 1" ]; then MODE=tune; fi
           python -W ignore -m cbb.run "${MODE:-update}"
+          if [ "$MODE" = "diag" ]; then git checkout -- data docs 2>/dev/null || true; fi
       - name: Commit data and site
         run: |
           git config user.name "cbb-model-bot"
