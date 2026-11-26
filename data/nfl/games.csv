@@ -735,7 +735,7 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401873077,2026-11-23T01:20Z,2026,post,1,0,25,49ers,SF,16,Vikings,MIN,35.0,10.0,Draft Kings,-3.5,-3.5,-115.0,-104.0,45.5,46.5,-104.0,-115.0,-198.0,166.0,,,,,,,,,,,,,,,,,San Francisco 49ers,Minnesota Vikings
 401873078,2026-11-24T01:15Z,2026,post,0,0,28,Commanders,WSH,4,Bengals,CIN,22.0,20.0,Draft Kings,6.0,1.5,-103.0,-116.0,54.5,52.5,-107.0,-112.0,237.0,-290.0,,,,,,,,,,,,,,,,,Washington Commanders,Cincinnati Bengals
 401873079,2026-11-26T01:00Z,2026,post,0,0,14,Rams,LAR,9,Packers,GB,26.0,13.0,DraftKings,-2.5,-3.5,-115.0,-104.0,43.5,49.5,-112.0,-107.0,-137.0,116.0,,,,,,,,,,,,,,,,,Los Angeles Rams,Green Bay Packers
-401873081,2026-11-26T18:00Z,2026,pre,0,0,8,Lions,DET,3,Bears,CHI,,,DraftKings,1.5,-2.5,-113.0,-106.0,55.5,51.5,-114.0,-105.0,102.0,-120.0,,,,,,,,,,,,,,,,,Detroit Lions,Chicago Bears
-401873080,2026-11-26T21:30Z,2026,pre,0,0,6,Cowboys,DAL,21,Eagles,PHI,,,DraftKings,-8.5,-1.5,-111.0,-108.0,48.5,49.5,-106.0,-113.0,-447.0,349.0,,,,,,,,,,,,,,,,,Dallas Cowboys,Philadelphia Eagles
-401873082,2026-11-27T01:20Z,2026,pre,0,0,2,Bills,BUF,12,Chiefs,KC,,,DraftKings,-3.0,-2.5,-102.0,-118.0,45.5,49.5,-114.0,-106.0,-151.0,127.0,,,,,,,,,,,,,,,,,Buffalo Bills,Kansas City Chiefs
-401873083,2026-11-27T20:00Z,2026,pre,0,0,23,Steelers,PIT,7,Broncos,DEN,,,DraftKings,3.5,1.5,-106.0,-113.0,36.5,41.5,-114.0,-105.0,170.0,-203.0,,,,,,,,,,,,,,,,,Pittsburgh Steelers,Denver Broncos
+401873081,2026-11-26T18:00Z,2026,pre,0,0,8,Lions,DET,3,Bears,CHI,,,Draft Kings,1.5,-2.5,-113.0,-106.0,55.5,51.5,-114.0,-105.0,102.0,-120.0,,,,,,,,,,,,,,,,,Detroit Lions,Chicago Bears
+401873080,2026-11-26T21:30Z,2026,pre,0,0,6,Cowboys,DAL,21,Eagles,PHI,,,Draft Kings,-8.5,-1.5,-111.0,-108.0,48.5,49.5,-106.0,-113.0,-447.0,348.0,,,,,,,,,,,,,,,,,Dallas Cowboys,Philadelphia Eagles
+401873082,2026-11-27T01:20Z,2026,pre,0,0,2,Bills,BUF,12,Chiefs,KC,,,Draft Kings,-3.0,-2.5,-102.0,-117.0,45.5,49.5,-114.0,-106.0,-151.0,127.0,,,,,,,,,,,,,,,,,Buffalo Bills,Kansas City Chiefs
+401873083,2026-11-27T20:00Z,2026,pre,0,0,23,Steelers,PIT,7,Broncos,DEN,,,Draft Kings,3.5,1.5,-106.0,-113.0,36.5,41.5,-114.0,-105.0,170.0,-203.0,,,,,,,,,,,,,,,,,Pittsburgh Steelers,Denver Broncos
