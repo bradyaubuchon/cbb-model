@@ -14054,21 +14054,21 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401920528,2026-11-26T18:00Z,2027,in,1,0,21,San Diego St,SDSU,120,Maryland,MD,,,DraftKings,-4.5,-1.5,-110.0,-110.0,152.5,153.5,-115.0,-105.0,-192.0,160.0,,,,,,,,,,,,,,,,,San Diego State Aztecs,Maryland Terrapins
 401929282,2026-11-26T18:30Z,2027,in,1,0,2116,UCF,UCF,103,Boston College,BC,,,DraftKings,-2.5,-2.5,-108.0,-112.0,147.5,144.5,-108.0,-112.0,-135.0,114.0,,,,,,,,,,,,,,,,,UCF Knights,Boston College Eagles
 401921674,2026-11-26T19:00Z,2027,in,1,0,2579,South Carolina,SC,9,Arizona St,ASU,,,DraftKings,-4.5,-3.5,-110.0,-110.0,139.5,140.5,-108.0,-112.0,-198.0,164.0,,,,,,,,,,,,,,,,,South Carolina Gamecocks,Arizona State Sun Devils
-401906869,2026-11-26T19:30Z,2027,pre,1,0,251,Texas,TEX,46,Georgetown,GTWN,,,DraftKings,-8.5,-8.5,-108.0,-112.0,153.5,155.5,-112.0,-108.0,-395.0,310.0,,,,,,,,,,,,,,,,,Texas Longhorns,Georgetown Hoyas
-401920529,2026-11-26T20:30Z,2027,pre,1,0,66,Iowa State,ISU,2633,Tennessee,TENN,,,DraftKings,-4.5,1.5,-112.0,-108.0,139.5,139.5,-110.0,-110.0,-205.0,170.0,,,,,,,,,,,,,,,,,Iowa State Cyclones,Tennessee Volunteers
-401920537,2026-11-26T20:30Z,2027,pre,1,0,130,Michigan,MICH,2390,Miami,MIA,,,DraftKings,1.5,2.5,-115.0,-105.0,159.5,163.5,-108.0,-112.0,-105.0,-115.0,,,,,,,,,,,,,,,,,Michigan Wolverines,Miami Hurricanes
-401921673,2026-11-26T21:30Z,2027,pre,1,0,30,USC,USC,328,Utah State,USU,,,DraftKings,-1.5,-3.5,-110.0,-110.0,156.5,162.5,-110.0,-110.0,-122.0,102.0,,,,,,,,,,,,,,,,,USC Trojans,Utah State Aggies
-401925757,2026-11-26T21:30Z,2027,pre,1,0,127,Michigan St,MSU,8,Arkansas,ARK,,,DraftKings,-5.5,-5.5,-110.0,-110.0,148.5,151.5,-108.0,-112.0,-225.0,185.0,,,,,,,,,,,,,,,,,Michigan State Spartans,Arkansas Razorbacks
-401917547,2026-11-26T22:00Z,2027,pre,1,0,26,UCLA,UCLA,2608,Saint Mary's,SMC,,,DraftKings,-7.5,-7.5,-105.0,-115.0,152.5,155.5,-108.0,-112.0,-325.0,260.0,,,,,,,,,,,,,,,,,UCLA Bruins,Saint Mary's Gaels
-401920538,2026-11-26T23:00Z,2027,pre,1,0,156,Creighton,CREI,2628,TCU,TCU,,,DraftKings,-1.5,1.5,-112.0,-108.0,153.5,156.5,-105.0,-115.0,-125.0,105.0,,,,,,,,,,,,,,,,,Creighton Bluejays,TCU Horned Frogs
-401909506,2026-11-27T00:00Z,2027,pre,1,0,221,Pitt,PITT,305,DePaul,DEP,,,DraftKings,-1.5,-1.5,105.0,-125.0,137.5,139.5,-105.0,-115.0,-112.0,-108.0,,,,,,,,,,,,,,,,,Pittsburgh Panthers,DePaul Blue Demons
-401918972,2026-11-27T00:00Z,2027,pre,1,0,99,LSU,LSU,2567,SMU,SMU,,,DraftKings,-6.5,-7.5,-112.0,-108.0,155.5,159.5,-108.0,-112.0,-310.0,250.0,,,,,,,,,,,,,,,,,LSU Tigers,SMU Mustangs
-401911523,2026-11-27T01:00Z,2027,pre,1,0,302,UC Davis,UCD,55,Jax State,JXST,,,DraftKings,3.5,1.5,-118.0,-102.0,137.5,138.5,-110.0,-110.0,136.0,-162.0,,,,,,,,,,,,,,,,,UC Davis Aggies,Jacksonville State Gamecocks
-401920530,2026-11-27T02:00Z,2027,pre,1,0,2599,St John's,SJU,97,Louisville,LOU,,,DraftKings,-1.5,4.5,-110.0,-110.0,160.5,157.5,-115.0,-105.0,-125.0,105.0,,,,,,,,,,,,,,,,,St. John's Red Storm,Louisville Cardinals
-401920539,2026-11-27T02:00Z,2027,pre,1,0,2306,Kansas St,KSU,333,Alabama,ALA,,,DraftKings,13.5,-12.5,-108.0,-112.0,169.5,177.5,-115.0,-105.0,700.0,-1100.0,,,,,,,,,,,,,,,,,Kansas State Wildcats,Alabama Crimson Tide
-401917546,2026-11-27T03:30Z,2027,pre,1,0,2437,Omaha,OMA,279,Pacific,PAC,,,DraftKings,7.5,8.5,-108.0,-112.0,139.5,139.5,-105.0,-115.0,275.0,-345.0,,,,,,,,,,,,,,,,,Omaha Mavericks,Pacific Tigers
-401920531,2026-11-27T04:30Z,2027,pre,1,0,2483,Oregon,ORE,2641,Texas Tech,TTU,,,DraftKings,10.5,8.5,-112.0,-108.0,148.5,153.5,-108.0,-112.0,400.0,-535.0,,,,,,,,,,,,,,,,,Oregon Ducks,Texas Tech Red Raiders
-401920540,2026-11-27T04:30Z,2027,pre,1,0,2250,Gonzaga,GONZ,239,Baylor,BAY,,,DraftKings,-3.5,4.5,-105.0,-115.0,153.5,166.5,-108.0,-112.0,-175.0,145.0,,,,,,,,,,,,,,,,,Gonzaga Bulldogs,Baylor Bears
+401906869,2026-11-26T19:30Z,2027,in,1,0,251,Texas,TEX,46,Georgetown,GTWN,,,DraftKings,-8.5,-8.5,-108.0,-112.0,153.5,155.5,-112.0,-108.0,-395.0,310.0,,,,,,,,,,,,,,,,,Texas Longhorns,Georgetown Hoyas
+401920529,2026-11-26T20:30Z,2027,pre,1,0,66,Iowa State,ISU,2633,Tennessee,TENN,,,Draft Kings,-4.5,1.5,-112.0,-108.0,139.5,139.5,-105.0,-115.0,-192.0,160.0,,,,,,,,,,,,,,,,,Iowa State Cyclones,Tennessee Volunteers
+401920537,2026-11-26T20:30Z,2027,pre,1,0,130,Michigan,MICH,2390,Miami,MIA,,,Draft Kings,1.5,2.5,-120.0,100.0,159.5,163.5,-108.0,-112.0,-105.0,-115.0,,,,,,,,,,,,,,,,,Michigan Wolverines,Miami Hurricanes
+401921673,2026-11-26T21:30Z,2027,pre,1,0,30,USC,USC,328,Utah State,USU,,,Draft Kings,-1.5,-3.5,-110.0,-110.0,156.5,162.5,-110.0,-110.0,-122.0,102.0,,,,,,,,,,,,,,,,,USC Trojans,Utah State Aggies
+401925757,2026-11-26T21:30Z,2027,pre,1,0,127,Michigan St,MSU,8,Arkansas,ARK,,,Draft Kings,-5.5,-5.5,-110.0,-110.0,148.5,151.5,-108.0,-112.0,-225.0,185.0,,,,,,,,,,,,,,,,,Michigan State Spartans,Arkansas Razorbacks
+401917547,2026-11-26T22:00Z,2027,pre,1,0,26,UCLA,UCLA,2608,Saint Mary's,SMC,,,Draft Kings,-7.5,-7.5,-112.0,-108.0,152.5,155.5,-105.0,-115.0,-340.0,270.0,,,,,,,,,,,,,,,,,UCLA Bruins,Saint Mary's Gaels
+401920538,2026-11-26T23:00Z,2027,pre,1,0,156,Creighton,CREI,2628,TCU,TCU,,,Draft Kings,-1.5,1.5,-112.0,-108.0,153.5,156.5,-105.0,-115.0,-125.0,105.0,,,,,,,,,,,,,,,,,Creighton Bluejays,TCU Horned Frogs
+401909506,2026-11-27T00:00Z,2027,pre,1,0,221,Pitt,PITT,305,DePaul,DEP,,,Draft Kings,1.5,-1.5,-130.0,110.0,137.5,139.5,-105.0,-115.0,-108.0,-112.0,,,,,,,,,,,,,,,,,Pittsburgh Panthers,DePaul Blue Demons
+401918972,2026-11-27T00:00Z,2027,pre,1,0,99,LSU,LSU,2567,SMU,SMU,,,Draft Kings,-7.5,-7.5,-105.0,-115.0,155.5,159.5,-108.0,-112.0,-310.0,250.0,,,,,,,,,,,,,,,,,LSU Tigers,SMU Mustangs
+401911523,2026-11-27T01:00Z,2027,pre,1,0,302,UC Davis,UCD,55,Jax State,JXST,,,Draft Kings,3.5,1.5,-118.0,-102.0,137.5,138.5,-110.0,-110.0,136.0,-162.0,,,,,,,,,,,,,,,,,UC Davis Aggies,Jacksonville State Gamecocks
+401920530,2026-11-27T02:00Z,2027,pre,1,0,2599,St John's,SJU,97,Louisville,LOU,,,Draft Kings,-1.5,4.5,-110.0,-110.0,160.5,157.5,-115.0,-105.0,-125.0,105.0,,,,,,,,,,,,,,,,,St. John's Red Storm,Louisville Cardinals
+401920539,2026-11-27T02:00Z,2027,pre,1,0,2306,Kansas St,KSU,333,Alabama,ALA,,,Draft Kings,13.5,-12.5,-108.0,-112.0,169.5,177.5,-115.0,-105.0,700.0,-1100.0,,,,,,,,,,,,,,,,,Kansas State Wildcats,Alabama Crimson Tide
+401917546,2026-11-27T03:30Z,2027,pre,1,0,2437,Omaha,OMA,279,Pacific,PAC,,,Draft Kings,7.5,8.5,-108.0,-112.0,139.5,139.5,-110.0,-110.0,275.0,-345.0,,,,,,,,,,,,,,,,,Omaha Mavericks,Pacific Tigers
+401920531,2026-11-27T04:30Z,2027,pre,1,0,2483,Oregon,ORE,2641,Texas Tech,TTU,,,Draft Kings,10.5,8.5,-112.0,-108.0,148.5,153.5,-108.0,-112.0,400.0,-535.0,,,,,,,,,,,,,,,,,Oregon Ducks,Texas Tech Red Raiders
+401920540,2026-11-27T04:30Z,2027,pre,1,0,2250,Gonzaga,GONZ,239,Baylor,BAY,,,Draft Kings,-3.5,4.5,-105.0,-115.0,153.5,166.5,-108.0,-112.0,-175.0,145.0,,,,,,,,,,,,,,,,,Gonzaga Bulldogs,Baylor Bears
 401920429,2026-11-27T16:00Z,2027,pre,1,0,2752,Xavier,XAV,258,Virginia,UVA,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Xavier Musketeers,Virginia Cavaliers
 401920848,2026-11-27T17:00Z,2027,pre,1,0,2900,St Thomas,STMN,2335,Liberty,LIB,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,St. Thomas Tommies,Liberty Flames
 401920533,2026-11-27T18:00Z,2027,pre,1,1,-1,TBD,TBD,-2,TBD,TBD,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,TBD,TBD
