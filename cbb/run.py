@@ -48,6 +48,7 @@ def pull(days, games, force=()):
 
 
 BOX_DONE = [False]
+ABSENT = [{}]  # college: players who sat the team's last 2 games, by game id
 
 
 def backfill_summaries(games, cur, budget):
@@ -145,7 +146,7 @@ def do_tune(games, cur):
                                                mean.to_numpy(), best.margin_sd, smooth=15.0)
             print("NFL key-number weights:", {k: v for k, v in best.key_w.items() if v > 1.2}, flush=True)
     has_box = "h_fga" in games.columns and int(store.finished(games).query("season == @cur - 1")["h_fga"].notna().sum())
-    store.PARAMS.write_text(json.dumps({**best.to_dict(), "blend_fit": "margin" in mix, "box_games_at_tune": has_box, "box_complete": BOX_DONE[0],
+    store.PARAMS.write_text(json.dumps({**best.to_dict(), "blend_fit": "margin" in mix, "box_games_at_tune": has_box, "box_complete": BOX_DONE[0], "inj_fit": "inj_f" in games.columns,
                                         "mix_fit": mix, "tune_log": log}, indent=1, default=float))
     print("Chosen:", best.to_dict(), flush=True)
     return best
@@ -159,6 +160,9 @@ def update_picks(games, ratings, pool, p, now_utc):
     inj_f, inj_detail = {}, {}
     if store.SPORT.key == "nba" and not upcoming.empty:
         inj_f, inj_detail = injuries.upcoming_missing(games, upcoming.to_dict("records"))
+    elif store.SPORT.key == "ncaam" and "inj_f" in games.columns:
+        inj_f = games.set_index("id")["inj_f"].fillna(0).to_dict()
+        inj_detail = ABSENT[0]
     for g in upcoming.to_dict("records"):
         mg, tot, hp, ap = ratings.predict(g["home_id"], g["away_id"], g["neutral"] == 1, pool, g.get("rest_f"))
         adj = p.inj_k * inj_f.get(g["id"], 0.0)
@@ -310,9 +314,14 @@ def update(sport, budget):
         return None
     games, box_left = backfill_summaries(games, cur, budget=budget)
     games = model.add_rest(games, store.SPORT)
+    players_left = None
     if sport == "nba":
-        injuries.backfill(games, cur, budget=1500)
+        players_left = injuries.backfill(games, cur, budget=1500)
         miss = injuries.missing_by_game(games)
+        games["inj_f"] = games["id"].map(miss)
+    elif sport == "ncaam":
+        players_left = injuries.backfill(games, cur, budget=1500)
+        miss, ABSENT[0] = injuries.prior_absence(games)
         games["inj_f"] = games["id"].map(miss)
 
     # tune the first time, and again as soon as last season's lines are in (blend weights need them)
@@ -320,7 +329,8 @@ def update(sport, budget):
     last = store.finished(games)
     last_lines = int(last.loc[last["season"].isin(tune_seasons(games, cur)), "spread"].notna().sum())
     retune = not meta or (not meta.get("blend_fit") and last_lines >= store.SPORT.min_lines_to_tune) \
-        or (box_left == 0 and not meta.get("box_complete"))  # all box scores in: fit the efficiency model
+        or (box_left == 0 and not meta.get("box_complete")) \
+        or (players_left == 0 and not meta.get("inj_fit"))  # player data complete: fit the absence effect
     BOX_DONE[0] = box_left == 0
     if retune:
         p = do_tune(games, cur)
@@ -363,6 +373,8 @@ def run_all(cmd, only=None):
                 games = model.add_rest(store.load_games(), store.SPORT)
                 if sport == "nba":
                     games["inj_f"] = games["id"].map(injuries.missing_by_game(games))
+                elif sport == "ncaam":
+                    games["inj_f"] = games["id"].map(injuries.prior_absence(games)[0])
                 if not games.empty:
                     cur = store.season_of(store.now_et().date())
                     p = do_tune(games, cur) if cmd == "tune" else load_params()

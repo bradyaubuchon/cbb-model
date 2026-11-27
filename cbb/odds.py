@@ -22,10 +22,8 @@ MARKETS, REGIONS = "h2h,spreads,totals", "us,eu"
 COST = 6               # credits per call = markets x regions
 MIN_EV = 0.02          # flag a price edge at +2% EV
 SHARP = "pinnacle"
-# books a US bettor can actually use (regulated + common offshore in the 'us' region)
-BETTABLE = {"draftkings", "fanduel", "betmgm", "williamhill_us", "espnbet", "betrivers", "fanatics",
-            "hardrockbet", "ballybet", "betparx", "fliff", "bovada", "betonlineag", "lowvig",
-            "mybookieag", "betus", "superbook", "wynnbet", "unibet_us", "pointsbetus", "twinspires"}
+# books Brady bets at. Every other book (Pinnacle above all) is used only to set the fair price.
+BETTABLE = {"draftkings", "fanduel"}
 
 
 def state_file():

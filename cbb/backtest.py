@@ -204,6 +204,19 @@ def fit_mix(pred):
     return out
 
 
+def key_weights_before(games, p, season):
+    """Key-number weights from seasons before `season` only (None if there's too little)."""
+    prior = sorted(s for s in games["season"].dropna().unique() if s < season)
+    if not prior:
+        return None
+    pred = walk_forward(games, p, [int(x) for x in prior], step=3)
+    if len(pred) < 250:
+        return None
+    mean = (-pred["spread"]).fillna(pred["pred_margin"])
+    return model.fit_key_weights((pred["home_score"] - pred["away_score"]).to_numpy(), mean.to_numpy(),
+                                 p.margin_sd, smooth=15.0)
+
+
 def run_backtest(games, p, cur_season):
     """Report on last season (used for tuning, so in-sample for the 3 knobs) and on the current
     season (out of sample)."""
@@ -211,6 +224,10 @@ def run_backtest(games, p, cur_season):
               "mix_fit": json.loads(store.PARAMS.read_text()).get("mix_fit") if store.PARAMS.exists() else None}
     for label, seasons in (("last_season", [cur_season - 1]), ("this_season", [cur_season])):
         pred = walk_forward(games, p, seasons, step=1)
-        report[label] = evaluate(pred, p)
+        pe = p
+        if p.key_w:  # NFL: grade with key-number weights fit only on EARLIER seasons (no peeking)
+            pe = model.Params.from_dict({**p.to_dict(), "key_w": key_weights_before(games, p, seasons[0])})
+            report.setdefault("key_w_used", {})[label] = pe.key_w
+        report[label] = evaluate(pred, pe)
     store.BACKTEST.write_text(json.dumps(report, indent=1, default=float))
     return report

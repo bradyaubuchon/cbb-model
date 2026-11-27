@@ -66,9 +66,11 @@ def backfill(games, cur, budget):
     import time
     ck = set(checked_file().read_text().split()) if checked_file().exists() else set()
     fin = store.finished(games)
-    todo = fin[(fin["season"] >= cur - 2) & ~fin["id"].isin(ck)].sort_values("date", ascending=False).head(budget)
+    first = cur - 2 if store.SPORT.key == "nba" else cur - 1  # college: last season + this one is plenty
+    allt = fin[(fin["season"] >= first) & ~fin["id"].isin(ck)]
+    todo = allt.sort_values("date", ascending=False).head(budget)
     if todo.empty:
-        return
+        return 0
     print(f"Player box scores: fetching {len(todo)} games", flush=True)
     rows = []
     for i, g in enumerate(todo.to_dict("records")):
@@ -96,6 +98,7 @@ def backfill(games, cur, budget):
             rows = []
             print(f"  ...{i + 1}", flush=True)
     _save(rows, ck)
+    return max(0, len(allt) - len(todo))
 
 
 def _save(rows, ck):
@@ -217,3 +220,51 @@ def upcoming_missing(games, upcoming):
         if rows:
             detail[g["id"]] = sorted(rows, key=lambda r: -r["value"])
     return f, detail
+
+
+def prior_absence(games, lookback=2):
+    """College has no injury report, so use the next best signal: rotation players who sat out
+    the team's last `lookback` games are likely still out. Works the same for past games (to fit
+    the effect) and upcoming ones (to apply it).
+    Returns ({game_id: inj_f}, {game_id: [detail rows]}) with inj_f = away - home missing value."""
+    h = history(games)
+    if h.empty:
+        return {}, {}
+    order = games.sort_values("date")[["id", "date", "home_id", "away_id", "home", "away", "state"]]
+    # team game sequence (finished and upcoming)
+    seq = pd.concat([order.assign(team=order["home_id"].astype(str), side="home"),
+                     order.assign(team=order["away_id"].astype(str), side="away")]).sort_values("date")
+    played = h[h["played"]].groupby(["team_id", "game_id"])["player_id"].apply(set).to_dict()
+    vals = h.set_index(["game_id", "player_id"])[["value", "min_avg"]]
+    latest_val = {}  # player -> (value, min_avg, name) as of their latest game
+    names = dict(zip(h["player_id"], h["name"]))
+    missing, detail = {}, {}
+    for team, grp in seq.groupby("team"):
+        past = []  # game ids of this team's finished games so far
+        for r in grp.itertuples():
+            if len(past) >= lookback + 3:
+                recent = past[-10:]
+                rot = set().union(*[played.get((team, gid), set()) for gid in recent[:-lookback]])
+                sat = [pid for pid in rot if all(pid not in played.get((team, gid), set()) for gid in past[-lookback:])]
+                tot, rows = 0.0, []
+                for pid in sat:
+                    v = latest_val.get(pid)
+                    if v and v[1] >= ROTATION_MIN:
+                        tot += v[0]
+                        rows.append({"team": r.home if r.side == "home" else r.away, "player": names.get(pid, pid),
+                                     "status": f"Missed last {lookback} games", "value": round(v[0], 2)})
+                missing[(r.id, r.side)] = (tot, rows)
+            if r.state == "post" and (team, r.id) in played:
+                past.append(r.id)
+                for pid in played[(team, r.id)]:
+                    if (r.id, pid) in vals.index:
+                        v = vals.loc[(r.id, pid)]
+                        if v["value"] == v["value"]:
+                            latest_val[pid] = (float(v["value"]), float(v["min_avg"]))
+    f, det = {}, {}
+    for gid in order["id"]:
+        hm, aw = missing.get((gid, "home"), (0.0, [])), missing.get((gid, "away"), (0.0, []))
+        f[gid] = aw[0] - hm[0]
+        if hm[1] or aw[1]:
+            det[gid] = sorted(hm[1] + aw[1], key=lambda x: -x["value"])
+    return f, det
