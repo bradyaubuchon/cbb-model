@@ -488,6 +488,8 @@ function render() {
   if (!V[view]) view = "tonight";
   drawSports();
   $("#stamp").textContent = "Updated " + D.updated;
+  const ageH = D.updated_iso ? (Date.now() - new Date(D.updated_iso)) / 36e5 : 0;
+  $("#stamp").innerHTML = esc("Updated " + D.updated) + (ageH > 3 ? ` <b style="color:var(--bad)">· ${Math.round(ageH)} hours old. Updates may be failing; lines below could be out of date.</b>` : "");
   document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-current", b.dataset.v === view ? "page" : "false"));
   V[view]();
   document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));

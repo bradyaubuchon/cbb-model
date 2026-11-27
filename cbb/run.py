@@ -168,9 +168,9 @@ def update_picks(games, ratings, pool, p, now_utc):
                 "spread": g.get("spread"), "total": g.get("total"),
                 "ml_home": g.get("ml_home"), "ml_away": g.get("ml_away")}
         rec = picks.get(g["id"])
-        if rec is None and priced:
-            rec = picks[g["id"]] = {"id": g["id"], "date": g["date"], "home": g["home"], "away": g["away"],
-                                    "first": snap}
+        if priced and (rec is None or "first" not in rec):
+            rec = picks.setdefault(g["id"], {"id": g["id"], "date": g["date"], "home": g["home"], "away": g["away"]})
+            rec["first"] = snap
         if rec is not None:
             rec["last"] = snap
         slate.append({**{k: g.get(k) for k in ("id", "date", "home", "away", "home_abbr", "away_abbr", "home_full", "away_full", "neutral", "spread", "total",
@@ -255,7 +255,7 @@ def record(picks, p):
     out = {mk: {"n": 0, "w": 0, "l": 0, "push": 0, "units": 0.0, "risked": 0.0, "clv_sum": 0.0, "clv_n": 0, "clv_pos": 0}
            for mk in ("spread", "total", "ml")}
     for rec in picks.values():
-        if "final" not in rec:
+        if "final" not in rec or "first" not in rec:  # price-edge-only games have no model snapshot
             continue
         hs, as_ = rec["final"]
         for mk in out:
