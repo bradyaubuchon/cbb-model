@@ -738,4 +738,4 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401873081,2026-11-26T18:00Z,2026,post,0,0,8,Lions,DET,3,Bears,CHI,35.0,39.0,DraftKings,1.5,-2.5,-117.0,-103.0,56.5,51.5,-106.0,-113.0,-103.0,-115.0,,,,,,,,,,,,,,,,,Detroit Lions,Chicago Bears
 401873080,2026-11-26T21:30Z,2026,post,0,0,6,Cowboys,DAL,21,Eagles,PHI,38.0,39.0,DraftKings,-8.5,-1.5,-109.0,-110.0,49.5,49.5,-113.0,-107.0,-477.0,368.0,,,,,,,,,,,,,,,,,Dallas Cowboys,Philadelphia Eagles
 401873082,2026-11-27T01:20Z,2026,in,0,0,2,Bills,BUF,12,Chiefs,KC,,,DraftKings,-3.0,-2.5,-101.0,-119.0,46.5,49.5,-105.0,-115.0,-155.0,131.0,,,,,,,,,,,,,,,,,Buffalo Bills,Kansas City Chiefs
-401873083,2026-11-27T20:00Z,2026,pre,0,0,23,Steelers,PIT,7,Broncos,DEN,,,DraftKings,4.5,1.5,-102.0,-118.0,36.5,41.5,-119.0,-101.0,209.0,-253.0,,,,,,,,,,,,,,,,,Pittsburgh Steelers,Denver Broncos
+401873083,2026-11-27T20:00Z,2026,pre,0,0,23,Steelers,PIT,7,Broncos,DEN,,,Draft Kings,4.5,1.5,-102.0,-118.0,36.5,41.5,-119.0,-101.0,205.0,-248.0,,,,,,,,,,,,,,,,,Pittsburgh Steelers,Denver Broncos
