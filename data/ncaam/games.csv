@@ -14093,8 +14093,8 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401911212,2026-11-27T21:00Z,2027,pre,0,0,45,G Washington,GW,2378,UMBC,UMBC,,,DraftKings,-21.5,-22.5,-108.0,-112.0,152.5,153.5,-108.0,-112.0,-5000.0,1800.0,,,,,,,,,,,,,,,,,George Washington Revolutionaries,UMBC Retrievers
 401912213,2026-11-27T21:00Z,2027,pre,0,0,44,American,AMER,2515,Radford,RAD,,,DraftKings,-7.5,-7.5,-115.0,-105.0,145.5,146.5,-112.0,-108.0,-340.0,,,,,,,,,,,,,,,,,,American University Eagles,Radford Highlanders
 401921818,2026-11-27T21:00Z,2027,pre,0,0,142,Missouri,MIZ,2029,AR-Pine Bluff,UAPB,,,DraftKings,-48.5,-49.5,-110.0,-110.0,155.5,156.5,-108.0,-112.0,,,,,,,,,,,,,,,,,,,Missouri Tigers,Arkansas-Pine Bluff Golden Lions
-401924845,2026-11-27T21:30Z,2027,pre,0,0,322,Lafayette,LAF,315,Niagara,NIA,,,DraftKings,-4.5,-5.5,-112.0,-108.0,141.5,142.5,-112.0,-108.0,-205.0,170.0,,,,,,,,,,,,,,,,,Lafayette Leopards,Niagara Purple Eagles
-401929283,2026-11-27T21:30Z,2027,pre,1,0,103,Boston College,BC,2132,Cincinnati,CIN,,,DraftKings,8.5,8.5,-102.0,-118.0,140.5,142.5,-112.0,-108.0,320.0,-410.0,,,,,,,,,,,,,,,,,Boston College Eagles,Cincinnati Bearcats
+401924845,2026-11-27T21:30Z,2027,pre,0,0,322,Lafayette,LAF,315,Niagara,NIA,,,DraftKings,-4.5,-5.5,-105.0,-115.0,141.5,142.5,-112.0,-108.0,-198.0,164.0,,,,,,,,,,,,,,,,,Lafayette Leopards,Niagara Purple Eagles
+401929283,2026-11-27T21:30Z,2027,pre,1,0,103,Boston College,BC,2132,Cincinnati,CIN,,,DraftKings,8.5,8.5,-108.0,-112.0,140.5,142.5,-112.0,-108.0,320.0,-410.0,,,,,,,,,,,,,,,,,Boston College Eagles,Cincinnati Bearcats
 401909789,2026-11-27T22:00Z,2027,pre,0,0,2305,Kansas,KU,222,Villanova,VILL,,,DraftKings,-12.5,-12.5,-110.0,-110.0,159.5,159.5,-110.0,-110.0,-900.0,600.0,,,,,,,,,,,,,,,,,Kansas Jayhawks,Villanova Wildcats
 401920382,2026-11-27T22:00Z,2027,pre,0,0,259,Virginia Tech,VT,295,Old Dominion,ODU,,,DraftKings,-18.5,-18.5,-108.0,-112.0,144.5,146.5,-115.0,-105.0,-3200.0,1400.0,,,,,,,,,,,,,,,,,Virginia Tech Hokies,Old Dominion Monarchs
 401920810,2026-11-27T22:00Z,2027,pre,1,0,245,Texas A&M,TA&M,269,Marquette,MARQ,,,DraftKings,-1.5,-2.5,-118.0,-102.0,157.5,157.5,-112.0,-108.0,-130.0,110.0,,,,,,,,,,,,,,,,,Texas A&M Aggies,Marquette Golden Eagles
@@ -14108,7 +14108,7 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401911380,2026-11-28T00:00Z,2027,pre,0,0,2193,ETSU,ETSU,2127,Charleston So,CHSO,,,DraftKings,-10.5,-11.5,-110.0,-110.0,141.5,145.5,-110.0,-110.0,-675.0,490.0,,,,,,,,,,,,,,,,,East Tennessee State Buccaneers,Charleston Southern Buccaneers
 401912711,2026-11-28T00:00Z,2027,pre,1,0,153,North Carolina,UNC,277,West Virginia,WVU,,,DraftKings,2.5,1.5,-102.0,-118.0,148.5,149.5,-115.0,-105.0,124.0,-148.0,,,,,,,,,,,,,,,,,North Carolina Tar Heels,West Virginia Mountaineers
 401918980,2026-11-28T00:00Z,2027,pre,0,0,151,East Carolina,ECU,286,NC Wesleyan,NCW,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,East Carolina Pirates,North Carolina Wesleyan Battling Bishops
-401926756,2026-11-28T00:00Z,2027,pre,1,0,2540,Santa Barbara,UCSB,2329,Lehigh,LEH,,,DraftKings,-14.5,-14.5,-105.0,-115.0,145.5,145.5,-105.0,-115.0,-1600.0,900.0,,,,,,,,,,,,,,,,,UC Santa Barbara Gauchos,Lehigh Mountain Hawks
+401926756,2026-11-28T00:00Z,2027,pre,1,0,2540,Santa Barbara,UCSB,2329,Lehigh,LEH,,,DraftKings,-14.5,-14.5,-108.0,-112.0,144.5,145.5,-115.0,-105.0,-1800.0,1000.0,,,,,,,,,,,,,,,,,UC Santa Barbara Gauchos,Lehigh Mountain Hawks
 401929284,2026-11-28T00:00Z,2027,pre,1,0,61,Georgia,UGA,2116,UCF,UCF,,,DraftKings,-5.5,-5.5,-108.0,-112.0,164.5,161.5,-105.0,-115.0,-225.0,185.0,,,,,,,,,,,,,,,,,Georgia Bulldogs,UCF Knights
 401925703,2026-11-28T00:30Z,2027,pre,0,0,248,Houston,HOU,2473,Oakland,OAK,,,DraftKings,-36.5,-38.5,-108.0,-112.0,146.5,150.5,-110.0,-110.0,,,,,,,,,,,,,,,,,,,Houston Cougars,Oakland Golden Grizzlies
 401929289,2026-11-28T00:30Z,2027,pre,1,0,344,Mississippi St,MSST,213,Penn State,PSU,,,DraftKings,-6.5,-6.5,-112.0,-108.0,156.5,156.5,-110.0,-110.0,-278.0,225.0,,,,,,,,,,,,,,,,,Mississippi State Bulldogs,Penn State Nittany Lions
@@ -14120,7 +14120,7 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401929381,2026-11-28T01:00Z,2027,pre,0,0,2031,Little Rock,LR,6371,Lane College,LANE,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Little Rock Trojans,Lane College Dragons
 401920543,2026-11-28T01:30Z,2027,pre,1,0,333,Alabama,ALA,2390,Miami,MIA,,,DraftKings,2.5,1.5,-118.0,-102.0,170.5,170.5,-110.0,-110.0,114.0,-135.0,,,,,,,,,,,,,,,,,Alabama Crimson Tide,Miami Hurricanes
 401919033,2026-11-28T02:00Z,2027,pre,0,0,96,Kentucky,UK,2724,Wichita St,WICH,,,DraftKings,-3.5,-3.5,-112.0,-108.0,156.5,159.5,-110.0,-110.0,-175.0,145.0,,,,,,,,,,,,,,,,,Kentucky Wildcats,Wichita State Shockers
-401920534,2026-11-28T02:00Z,2027,pre,1,0,97,Louisville,LOU,2633,Tennessee,TENN,,,DraftKings,1.5,1.5,-118.0,-102.0,149.5,150.5,-110.0,-110.0,102.0,-122.0,,,,,,,,,,,,,,,,,Louisville Cardinals,Tennessee Volunteers
+401920534,2026-11-28T02:00Z,2027,pre,1,0,97,Louisville,LOU,2633,Tennessee,TENN,,,DraftKings,1.5,1.5,-118.0,-102.0,150.5,150.5,-110.0,-110.0,102.0,-122.0,,,,,,,,,,,,,,,,,Louisville Cardinals,Tennessee Volunteers
 401926783,2026-11-28T03:30Z,2027,pre,1,0,2437,Omaha,OMA,55,Jax State,JXST,,,DraftKings,5.5,7.5,-108.0,-112.0,144.5,144.5,-110.0,-110.0,220.0,-270.0,,,,,,,,,,,,,,,,,Omaha Mavericks,Jacksonville State Gamecocks
 401920544,2026-11-28T04:00Z,2027,pre,1,0,2250,Gonzaga,GONZ,156,Creighton,CREI,,,DraftKings,-5.5,-5.5,-110.0,-110.0,161.5,161.5,-105.0,-115.0,,,,,,,,,,,,,,,,,,,Gonzaga Bulldogs,Creighton Bluejays
 401920535,2026-11-28T04:30Z,2027,pre,1,0,21,San Diego St,SDSU,2641,Texas Tech,TTU,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,San Diego State Aztecs,Texas Tech Red Raiders
