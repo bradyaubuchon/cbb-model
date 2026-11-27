@@ -2925,7 +2925,7 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401909332,2026-11-28T02:00Z,2027,pre,0,0,21,Suns,PHX,6,Mavericks,DAL,,,DraftKings,-1.5,-3.5,-116.0,-104.0,226.5,227.5,-108.0,-112.0,-130.0,110.0,,,,,,,,,,,,,,,,,Phoenix Suns,Dallas Mavericks
 401909333,2026-11-28T02:30Z,2027,pre,0,0,24,Spurs,SA,13,Lakers,LAL,,,DraftKings,-5.5,7.5,-115.0,-105.0,225.5,232.5,-104.0,-116.0,-217.0,180.0,,,,,,,,,,,,,,,,,San Antonio Spurs,Los Angeles Lakers
 401909334,2026-11-28T02:30Z,2027,pre,0,0,26,Jazz,UTAH,7,Nuggets,DEN,,,DraftKings,9.5,9.5,-105.0,-115.0,229.5,228.5,-107.0,-113.0,380.0,-497.0,,,,,,,,,,,,,,,,,Utah Jazz,Denver Nuggets
-401909335,2026-11-28T02:30Z,2027,pre,0,0,12,Clippers,LAC,3,Pelicans,NO,,,DraftKings,-3.5,-2.5,-106.0,-114.0,231.5,228.5,-110.0,-110.0,-158.0,133.0,,,,,,,,,,,,,,,,,LA Clippers,New Orleans Pelicans
+401909335,2026-11-28T02:30Z,2027,pre,0,0,12,Clippers,LAC,3,Pelicans,NO,,,DraftKings,-3.5,-2.5,-106.0,-114.0,231.5,228.5,-105.0,-115.0,-158.0,133.0,,,,,,,,,,,,,,,,,LA Clippers,New Orleans Pelicans
 401909336,2026-11-28T02:30Z,2027,pre,0,0,22,Trail Blazers,POR,9,Warriors,GS,,,DraftKings,-8.5,-9.5,-118.0,-103.0,221.5,221.5,-107.0,-113.0,-378.0,300.0,,,,,,,,,,,,,,,,,Portland Trail Blazers,Golden State Warriors
 401910046,2026-11-28T22:00Z,2027,pre,0,0,27,Wizards,WSH,19,Magic,ORL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Washington Wizards,Orlando Magic
 401910047,2026-11-28T23:00Z,2027,pre,0,0,30,Hornets,CHA,17,Nets,BKN,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Charlotte Hornets,Brooklyn Nets
