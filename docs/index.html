@@ -73,6 +73,10 @@ h3{font:600 17px/1.3 Barlow,sans-serif;margin:0 0 6px}
 .pick small{font:600 18px var(--cond);color:var(--muted);margin-left:6px}
 .matchup{margin:0;font-weight:500}
 .stake{margin:4px 0 0;font:600 17px var(--cond);color:var(--muted)}
+.size{display:block;color:var(--ink);margin-top:2px}
+details.modelpicks{margin-top:28px}
+details.modelpicks>summary{cursor:pointer;font:700 22px/1.2 var(--cond);margin:0 4px 10px;list-style-position:inside}
+details.modelpicks>summary span{font:500 15px Barlow,sans-serif;color:var(--muted);margin-left:6px}
 .why{margin:6px 0 0;color:var(--muted);font-size:15px;grid-column:1/-1}
 .edge{text-align:right;border-radius:10px;padding:8px 10px;min-width:86px}
 .edge b{display:block;font:700 26px/1 var(--cond)}
@@ -162,7 +166,7 @@ footer{max-width:640px;margin:20px auto 0;padding:0 20px;color:var(--muted);font
 </div></nav>
 
 <script>
-const APP = "4.1-d745d31";
+const APP = "4.2-3c4458c";
 const SPORTS = [["ncaam", "College"], ["nba", "NBA"], ["nfl", "NFL"]];
 let sport = (() => { try { return localStorage.getItem("sport") || "ncaam"; } catch (e) { return "ncaam"; } })();
 let VER = null;
@@ -270,11 +274,17 @@ function ticket(g, mk, b, label, where, why, big) {
       <div class="main">
         <div><div class="pick">${pickText(g, mk, b)}<small>${am(b.odds)}</small></div>
           <p class="matchup">${esc(g.away)} ${g.neutral ? "vs" : "at"} ${esc(g.home)}</p>
-          <p class="stake">${stakeText(b.odds)}</p></div>
+          <p class="stake">${stakeText(b.odds)}${label === "price" ? ` <span class="size">Suggested size: ${sizeMult(b.ev, b.odds)}×</span>` : ""}</p></div>
         <div class="edge"><b>${spct(b.ev)}</b><span>${t.label}</span></div>
         <p class="why">${why}</p>
         ${thin ? '<p class="note-thin">One team has played fewer than 5 games, so its rating still leans on last season.</p>' : ""}
       </div></article>`;
+}
+function sizeMult(ev, odds) {
+  // quarter-Kelly, assuming 1 unit is about 1% of bankroll; shown relative to the usual stake
+  const b = odds > 0 ? odds / 100 : 100 / -odds, usual = odds < 0 ? -odds / 100 : 1;
+  const riskU = 100 * (ev / b) / 4;
+  return Math.min(3, Math.max(0.5, Math.round(2 * riskU / usual) / 2));
 }
 function tier(ev) { return ev >= 0.07 ? {cls: "t-big", label: "Bigger edge"} : {cls: "t-small", label: "Small edge"}; }
 function pickText(g, mk, b) {
@@ -339,14 +349,15 @@ function tonight() {
   let h = `<h2>Best prices</h2>`;
   if (!D.odds_time) h += `<div class="empty"><b>Sportsbook comparison isn't on yet.</b>It starts once the Odds API key is saved in GitHub and the next update runs.</div>`;
   else {
-    h += `<p class="lede">Bets where a sportsbook pays more than the fair price set by the sharpest book. This doesn't depend on our model. Prices checked ${day(D.odds_time)} ${tm(D.odds_time)}; they move, so confirm before betting.</p>`;
+    h += `<p class="lede">Bets where DraftKings or FanDuel pays more than the fair price set by the sharpest book. This doesn't depend on our model. Prices checked ${day(D.odds_time)} ${tm(D.odds_time)}; they move, so confirm before betting.</p>`;
     if (!P.length) h += `<div class="empty"><b>No prices beat fair value right now.</b>Mispriced lines are usually small and short-lived. New prices are checked several times a day.</div>`;
     for (const {g, mk, b} of P) h += ticket(g, mk, b, "price", b.book_title, priceWhy(g, mk, b), 0.05);
   }
-  h += `<h2>Model picks</h2>` + trustBlock(true);
-  h += `<p class="lede">Games where our ratings and DraftKings' line disagree enough to be worth a look.</p>`;
-  if (!F.length) h += `<div class="empty"><b>No model picks right now.</b>That's expected: in testing, our ratings rarely disagree with DraftKings by enough to matter.</div>`;
+  h += `<details class="modelpicks"><summary>Model picks <span>${F.length} · not recommended</span></summary>` + trustBlock(true);
+  h += `<p class="lede">Games where our own ratings disagree with DraftKings. In testing these haven't beaten the closing line, so they're here for reference, not betting.</p>`;
+  if (!F.length) h += `<div class="empty"><b>No model picks right now.</b>That's expected: our ratings rarely disagree with DraftKings by enough to matter.</div>`;
   for (const {g, mk, b} of F) h += ticket(g, mk, b, "model", "", whyText(g, mk, b), 0.07);
+  h += `</details>`;
   h += `<h2>All games</h2><p class="lede">Next ${D.horizon_h >= 100 ? Math.round(D.horizon_h / 24) + " days" : D.horizon_h + " hours"}. Tap a game for our prediction. A dot means there's a flagged bet.</p>`;
   if (!D.slate.length) h += `<div class="empty"><b>No games on the board.</b>Games appear here once ESPN lists them.</div>`;
   else {
@@ -366,7 +377,7 @@ function tonight() {
           <span class="teams"><span>${esc(g.away)}</span><span>${g.neutral ? "vs" : "at"} ${esc(g.home)}</span></span>
           <span class="line">${dot}${line}</span></button>
         <div class="detail">
-          ${(g.injuries || []).length ? `<p class="score"><b>Injury report:</b> ${g.injuries.slice(0, 5).map(r => `${esc(r.player)} (${esc(r.team)}, ${esc(r.status.toLowerCase())})`).join("; ")}.${Math.abs(g.inj_adj || 0) >= 0.1 ? ` That moves our number ${n1(Math.abs(g.inj_adj))} points toward ${esc(g.inj_adj > 0 ? g.home : g.away)}.` : ""}</p>` : ""}
+          ${(g.injuries || []).length ? `<p class="score"><b>${D.sport === "ncaam" ? "Likely out" : "Injury report"}:</b> ${g.injuries.slice(0, 5).map(r => `${esc(r.player)} (${esc(r.team)}, ${esc(r.status.toLowerCase())})`).join("; ")}.${Math.abs(g.inj_adj || 0) >= 0.1 ? ` That moves our number ${n1(Math.abs(g.inj_adj))} points toward ${esc(g.inj_adj > 0 ? g.home : g.away)}.` : ""}</p>` : ""}
           ${g.rest_h != null && g.rest_a != null && g.rest_h !== g.rest_a && D.sport !== "nfl" && Math.min(g.rest_h, g.rest_a) <= 1 ? `<p class="score">${esc(g.rest_h < g.rest_a ? g.home : g.away)} is on the second night of a back-to-back.</p>` : ""}
           <p class="score">${g.spread != null ? "We predict" : "Ratings predict"} ${esc(g.away)} ${Math.round(g.spread != null ? ap : g.pred_away)}, ${esc(g.home)} ${Math.round(g.spread != null ? hp : g.pred_home)}.${g.neutral ? " Neutral court." : ""}</p>
           ${rows ? `<table class="mkts"><tr><td class="neg">Our model, best side</td><td class="neg">Edge</td></tr>${rows}</table>` : "<p>No DraftKings line yet.</p>"}
@@ -382,6 +393,7 @@ function tonight() {
     <dt>Moneyline</dt><dd>A bet on who wins outright. +150 pays $150 on a $100 bet; −150 means you bet $150 to win $100.</dd>
     <dt>Edge</dt><dd>How much we expect to win per dollar risked, using our numbers instead of DraftKings'. +4% means about 4 cents per dollar over the long run, if our numbers are right.</dd>
     <dt>Units</dt><dd>Your standard bet size. Favorites (minus odds) are bet to win 1 unit; underdogs (plus odds) risk 1 unit. With a $10 unit, a −110 bet risks $11 to win $10, and a +150 bet risks $10 to win $15. Return is profit divided by units risked.</dd>
+    <dt>Suggested size</dt><dd>How much to bet compared with your usual stake, scaled to the edge (a quarter of the "Kelly" amount, assuming one unit is about 1% of your bankroll). Bigger edges get bigger bets, capped at 3×.</dd>
     <dt>Closing line value</dt><dd>Whether the line moved toward our pick before the game started. Beating the closing line regularly is the best early sign that an edge is real.</dd>
   </dl></details>`;
   $("#m").innerHTML = h;
