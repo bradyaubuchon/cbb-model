@@ -742,7 +742,7 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401873084,2026-11-29T18:00Z,2026,pre,0,0,16,Vikings,MIN,1,Falcons,ATL,,,DraftKings,-7.0,-4.5,-101.0,-119.0,41.5,43.5,-109.0,-110.0,-310.0,252.0,,,,,,,,,,,,,,,,,Minnesota Vikings,Atlanta Falcons
 401873085,2026-11-29T18:00Z,2026,pre,0,0,34,Texans,HOU,33,Ravens,BAL,,,DraftKings,-6.5,-1.5,-112.0,-107.0,47.5,45.5,-106.0,-113.0,-332.0,267.0,,,,,,,,,,,,,,,,,Houston Texans,Baltimore Ravens
 401873087,2026-11-29T18:00Z,2026,pre,0,0,4,Bengals,CIN,18,Saints,NO,,,DraftKings,-9.5,-6.5,-115.0,-105.0,48.5,48.5,-109.0,-110.0,-550.0,418.0,,,,,,,,,,,,,,,,,Cincinnati Bengals,New Orleans Saints
-401873088,2026-11-29T18:00Z,2026,pre,0,0,11,Colts,IND,19,Giants,NYG,,,DraftKings,5.5,-2.5,-112.0,-107.0,41.5,47.5,-111.0,-108.0,221.0,-266.0,,,,,,,,,,,,,,,,,Indianapolis Colts,New York Giants
+401873088,2026-11-29T18:00Z,2026,pre,0,0,11,Colts,IND,19,Giants,NYG,,,DraftKings,5.5,-2.5,-112.0,-107.0,41.5,47.5,-111.0,-108.0,221.0,-267.0,,,,,,,,,,,,,,,,,Indianapolis Colts,New York Giants
 401873089,2026-11-29T18:00Z,2026,pre,0,0,15,Dolphins,MIA,20,Jets,NYJ,,,DraftKings,5.5,-1.5,-113.0,-106.0,39.5,41.5,-117.0,-103.0,212.0,-258.0,,,,,,,,,,,,,,,,,Miami Dolphins,New York Jets
 401873090,2026-11-29T18:00Z,2026,pre,0,0,30,Jaguars,JAX,10,Titans,TEN,,,DraftKings,-14.0,-5.5,-107.0,-112.0,48.5,45.5,-105.0,-115.0,-930.0,630.0,,,,,,,,,,,,,,,,,Jacksonville Jaguars,Tennessee Titans
 401873093,2026-11-29T21:05Z,2026,pre,0,0,24,Chargers,LAC,17,Patriots,NE,,,DraftKings,3.0,-2.5,-118.0,-101.0,34.5,45.5,-116.0,-103.0,127.0,-150.0,,,,,,,,,,,,,,,,,Los Angeles Chargers,New England Patriots
