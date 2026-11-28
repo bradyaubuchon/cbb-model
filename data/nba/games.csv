@@ -2931,7 +2931,7 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401910047,2026-11-28T23:00Z,2027,pre,0,0,30,Hornets,CHA,17,Nets,BKN,,,DraftKings,-5.5,-5.5,-115.0,-105.0,213.5,213.5,-110.0,-110.0,-238.0,197.0,,,,,,,,,,,,,,,,,Charlotte Hornets,Brooklyn Nets
 401910048,2026-11-29T01:00Z,2027,pre,0,0,4,Bulls,CHI,11,Pacers,IND,,,DraftKings,-2.5,-2.5,-115.0,-105.0,234.5,236.5,-110.0,-110.0,-142.0,120.0,,,,,,,,,,,,,,,,,Chicago Bulls,Indiana Pacers
 401910049,2026-11-29T01:00Z,2027,pre,0,0,15,Bucks,MIL,25,Thunder,OKC,,,DraftKings,11.5,11.5,-110.0,-110.0,228.5,228.5,-110.0,-110.0,420.0,-561.0,,,,,,,,,,,,,,,,,Milwaukee Bucks,Oklahoma City Thunder
-401910050,2026-11-29T01:30Z,2027,pre,0,0,10,Rockets,HOU,20,76ers,PHI,,,DraftKings,-12.5,-11.5,-106.0,-114.0,220.5,220.5,-105.0,-115.0,-518.0,394.0,,,,,,,,,,,,,,,,,Houston Rockets,Philadelphia 76ers
+401910050,2026-11-29T01:30Z,2027,pre,0,0,10,Rockets,HOU,20,76ers,PHI,,,DraftKings,-12.5,-11.5,-106.0,-114.0,220.5,220.5,-105.0,-115.0,-494.0,378.0,,,,,,,,,,,,,,,,,Houston Rockets,Philadelphia 76ers
 401910054,2026-11-29T20:30Z,2027,pre,0,0,5,Cavaliers,CLE,14,Heat,MIA,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Cleveland Cavaliers,Miami Heat
 401910051,2026-11-29T21:00Z,2027,pre,0,0,29,Grizzlies,MEM,13,Lakers,LAL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Memphis Grizzlies,Los Angeles Lakers
 401910052,2026-11-29T21:00Z,2027,pre,0,0,24,Spurs,SA,2,Celtics,BOS,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,San Antonio Spurs,Boston Celtics
