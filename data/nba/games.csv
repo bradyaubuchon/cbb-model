@@ -2921,14 +2921,14 @@ id,date,season,state,neutral,conf_game,home_id,home,home_abbr,away_id,away,away_
 401909328,2026-11-28T00:30Z,2027,in,0,0,11,Pacers,IND,20,76ers,PHI,,,Draft Kings,3.5,4.5,-112.0,-108.0,228.5,234.5,-107.0,-113.0,142.0,-170.0,,,,,,,,,,,,,,,,,Indiana Pacers,Philadelphia 76ers
 401909329,2026-11-28T00:30Z,2027,in,0,0,28,Raptors,TOR,17,Nets,BKN,,,Draft Kings,-9.5,-7.5,-108.0,-112.0,218.5,221.5,-113.0,-107.0,-374.0,297.0,,,,,,,,,,,,,,,,,Toronto Raptors,Brooklyn Nets
 401909330,2026-11-28T01:00Z,2027,in,0,0,2,Celtics,BOS,1,Hawks,ATL,,,DraftKings,-9.5,-9.5,-103.0,-118.0,224.5,222.5,-107.0,-113.0,-378.0,300.0,,,,,,,,,,,,,,,,,Boston Celtics,Atlanta Hawks
-401909331,2026-11-28T01:30Z,2027,pre,0,0,16,Timberwolves,MIN,29,Grizzlies,MEM,,,Draft Kings,-2.5,-2.5,-112.0,-108.0,219.5,223.5,-115.0,-105.0,-148.0,124.0,,,,,,,,,,,,,,,,,Minnesota Timberwolves,Memphis Grizzlies
-401909332,2026-11-28T02:00Z,2027,pre,0,0,21,Suns,PHX,6,Mavericks,DAL,,,Draft Kings,-4.5,-3.5,-105.0,-115.0,225.5,227.5,-110.0,-110.0,-174.0,146.0,,,,,,,,,,,,,,,,,Phoenix Suns,Dallas Mavericks
-401909333,2026-11-28T02:30Z,2027,pre,0,0,24,Spurs,SA,13,Lakers,LAL,,,Draft Kings,-6.5,7.5,-105.0,-115.0,226.5,232.5,-108.0,-112.0,-217.0,180.0,,,,,,,,,,,,,,,,,San Antonio Spurs,Los Angeles Lakers
-401909334,2026-11-28T02:30Z,2027,pre,0,0,26,Jazz,UTAH,7,Nuggets,DEN,,,Draft Kings,9.5,9.5,-112.0,-108.0,232.5,228.5,-112.0,-108.0,322.0,-410.0,,,,,,,,,,,,,,,,,Utah Jazz,Denver Nuggets
-401909335,2026-11-28T02:30Z,2027,pre,0,0,12,Clippers,LAC,3,Pelicans,NO,,,Draft Kings,-2.5,-2.5,-104.0,-116.0,229.5,228.5,-115.0,-105.0,-135.0,114.0,,,,,,,,,,,,,,,,,LA Clippers,New Orleans Pelicans
-401909336,2026-11-28T02:30Z,2027,pre,0,0,22,Trail Blazers,POR,9,Warriors,GS,,,Draft Kings,-8.5,-9.5,-104.0,-116.0,216.5,221.5,-108.0,-112.0,-324.0,261.0,,,,,,,,,,,,,,,,,Portland Trail Blazers,Golden State Warriors
-401910046,2026-11-28T22:00Z,2027,pre,0,0,27,Wizards,WSH,19,Magic,ORL,,,Draft Kings,3.5,3.5,-110.0,-110.0,218.5,218.5,-114.0,-106.0,142.0,-169.0,,,,,,,,,,,,,,,,,Washington Wizards,Orlando Magic
-401910047,2026-11-28T23:00Z,2027,pre,0,0,30,Hornets,CHA,17,Nets,BKN,,,Draft Kings,-5.5,-5.5,-106.0,-114.0,213.5,213.5,-110.0,-110.0,-224.0,186.0,,,,,,,,,,,,,,,,,Charlotte Hornets,Brooklyn Nets
-401910048,2026-11-29T01:00Z,2027,pre,0,0,4,Bulls,CHI,11,Pacers,IND,,,Draft Kings,-2.5,-2.5,-110.0,-110.0,236.5,236.5,-106.0,-114.0,-141.0,119.0,,,,,,,,,,,,,,,,,Chicago Bulls,Indiana Pacers
-401910049,2026-11-29T01:00Z,2027,pre,0,0,15,Bucks,MIL,25,Thunder,OKC,,,Draft Kings,12.5,11.5,-114.0,-106.0,228.5,228.5,-110.0,-110.0,420.0,-561.0,,,,,,,,,,,,,,,,,Milwaukee Bucks,Oklahoma City Thunder
+401909331,2026-11-28T01:30Z,2027,in,0,0,16,Timberwolves,MIN,29,Grizzlies,MEM,,,Draft Kings,-2.5,-2.5,-112.0,-108.0,219.5,223.5,-115.0,-105.0,-148.0,124.0,,,,,,,,,,,,,,,,,Minnesota Timberwolves,Memphis Grizzlies
+401909332,2026-11-28T02:00Z,2027,in,0,0,21,Suns,PHX,6,Mavericks,DAL,,,Draft Kings,-4.5,-3.5,-105.0,-115.0,225.5,227.5,-110.0,-110.0,-174.0,146.0,,,,,,,,,,,,,,,,,Phoenix Suns,Dallas Mavericks
+401909333,2026-11-28T02:30Z,2027,pre,0,0,24,Spurs,SA,13,Lakers,LAL,,,DraftKings,-6.5,7.5,-115.0,-105.0,227.5,232.5,-112.0,-108.0,-237.0,196.0,,,,,,,,,,,,,,,,,San Antonio Spurs,Los Angeles Lakers
+401909334,2026-11-28T02:30Z,2027,pre,0,0,26,Jazz,UTAH,7,Nuggets,DEN,,,DraftKings,9.5,9.5,-108.0,-112.0,231.5,228.5,-110.0,-110.0,322.0,-410.0,,,,,,,,,,,,,,,,,Utah Jazz,Denver Nuggets
+401909335,2026-11-28T02:30Z,2027,pre,0,0,12,Clippers,LAC,3,Pelicans,NO,,,DraftKings,-2.5,-2.5,-104.0,-116.0,230.5,228.5,-105.0,-115.0,-135.0,114.0,,,,,,,,,,,,,,,,,LA Clippers,New Orleans Pelicans
+401909336,2026-11-28T02:30Z,2027,pre,0,0,22,Trail Blazers,POR,9,Warriors,GS,,,DraftKings,-8.5,-9.5,-108.0,-112.0,216.5,221.5,-108.0,-112.0,-324.0,261.0,,,,,,,,,,,,,,,,,Portland Trail Blazers,Golden State Warriors
+401910046,2026-11-28T22:00Z,2027,pre,0,0,27,Wizards,WSH,19,Magic,ORL,,,DraftKings,3.5,3.5,-110.0,-110.0,218.5,218.5,-114.0,-106.0,142.0,-169.0,,,,,,,,,,,,,,,,,Washington Wizards,Orlando Magic
+401910047,2026-11-28T23:00Z,2027,pre,0,0,30,Hornets,CHA,17,Nets,BKN,,,DraftKings,-5.5,-5.5,-106.0,-114.0,213.5,213.5,-110.0,-110.0,-224.0,186.0,,,,,,,,,,,,,,,,,Charlotte Hornets,Brooklyn Nets
+401910048,2026-11-29T01:00Z,2027,pre,0,0,4,Bulls,CHI,11,Pacers,IND,,,DraftKings,-2.5,-2.5,-110.0,-110.0,236.5,236.5,-106.0,-114.0,-141.0,119.0,,,,,,,,,,,,,,,,,Chicago Bulls,Indiana Pacers
+401910049,2026-11-29T01:00Z,2027,pre,0,0,15,Bucks,MIL,25,Thunder,OKC,,,DraftKings,12.5,11.5,-114.0,-106.0,228.5,228.5,-110.0,-110.0,420.0,-561.0,,,,,,,,,,,,,,,,,Milwaukee Bucks,Oklahoma City Thunder
 401910050,2026-11-29T01:30Z,2027,pre,0,0,10,Rockets,HOU,20,76ers,PHI,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Houston Rockets,Philadelphia 76ers
